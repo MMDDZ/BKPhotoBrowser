@@ -18,9 +18,9 @@
 @interface BKPhotoBrowser()<UICollectionViewDataSource,UICollectionViewDelegate,UICollectionViewDelegateFlowLayout>
 {
     UICollectionView * photoCollectionView;
-    UIView * shadowView;
     
     UILabel * numLab;
+    UIView * numLabShadowView;
 }
 
 @end
@@ -38,22 +38,18 @@
 {
     self = [super init];
     if (self) {
-        self.backgroundColor = [UIColor clearColor];
+        self.backgroundColor = [UIColor blackColor];
     }
     return self;
 }
 
 -(void)initSubView
 {
-    shadowView = [[UIView alloc]initWithFrame:self.frame];
-    shadowView.backgroundColor = [UIColor blackColor];
-    [self addSubview:shadowView];
-    
     [self initCollectionView];
     
     if (_localImageArr) {
         if ([_localImageArr count] != 1) {
-            numLab = [[UILabel alloc]initWithFrame:CGRectMake(0, 50, self.frame.size.width, 20)];
+            numLab = [[UILabel alloc]initWithFrame:CGRectMake(0, 30, self.frame.size.width, 20)];
             numLab.font = [UIFont systemFontOfSize:18];
             numLab.textAlignment = NSTextAlignmentCenter;
             numLab.textColor = [UIColor whiteColor];
@@ -62,7 +58,7 @@
         }
     }else{
         if ([_thumbImageArr count] != 1) {
-            numLab = [[UILabel alloc]initWithFrame:CGRectMake(0, 50, self.frame.size.width, 20)];
+            numLab = [[UILabel alloc]initWithFrame:CGRectMake(0, 30, self.frame.size.width, 20)];
             numLab.font = [UIFont systemFontOfSize:18];
             numLab.textAlignment = NSTextAlignmentCenter;
             numLab.textColor = [UIColor whiteColor];
@@ -72,6 +68,9 @@
             [numLab addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
         }
     }
+    
+//    numLabShadowView = [[UIView alloc]init];
+//    numLabShadowView
 }
 
 -(void)initCollectionView

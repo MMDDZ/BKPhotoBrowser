@@ -9,6 +9,7 @@
 #ifndef BKPhotoBrowserConfig_h
 #define BKPhotoBrowserConfig_h
 
+//两个照片之间的距离
 #define BKPhotoBrowser_ImageViewMargin 10
 
 #endif /* BKPhotoBrowserConfig_h */

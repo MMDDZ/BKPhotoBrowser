@@ -22,7 +22,7 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-    imageArr = @[@"http://img0.imgtn.bdimg.com/it/u=4256573763,278547175&fm=206&gp=0.jpg",@"http://img0.imgtn.bdimg.com/it/u=4256573763,278547175&fm=206&gp=0.jpg"];
+    imageArr = @[@"http://101.200.81.192:8083/Public/thumb/20160808173350651819.jpg",@"http://101.200.81.192:8083/Public/thumb/20160808173349115100.jpg"];
     
     CGFloat width = (self.view.frame.size.width-30)/2.0f;
     CGFloat height = width;
@@ -46,7 +46,7 @@
     BKPhotoBrowser * photoBrowser = [[BKPhotoBrowser alloc]init];
     photoBrowser.thumbImageArr = imageArr;
     photoBrowser.selectNum = button.tag;
-    photoBrowser.originalImageArr = @[@"http://pic9.nipic.com/20100904/4845745_195609329636_2.jpg",@"http://pic9.nipic.com/20100904/4845745_195609329636_2.jpg"];
+    photoBrowser.originalImageArr = @[@"http://101.200.81.192:8083/Public/upfile/20160808173350651819.jpg",@"http://101.200.81.192:8083/Public/thumb/20160808173349115100.jpg"];
     [photoBrowser showInView:button];
 }
 

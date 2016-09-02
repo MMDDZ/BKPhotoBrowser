@@ -7,6 +7,7 @@
 //
 
 #define Photo_CollectionView_Identifier @"photo_cell"
+#define reduce 0.3
 
 #import "BKPhotoBrowser.h"
 #import "BKBrowserImageView.h"
@@ -14,14 +15,16 @@
 #import "BKPhotoBrowserConfig.h"
 #import "UIImageView+WebCache.h"
 #import "SDWebImageManager.h"
+#import "BKBrowserIndicator.h"
 
 @interface BKPhotoBrowser()<UICollectionViewDataSource,UICollectionViewDelegate,UICollectionViewDelegateFlowLayout>
 {
-    UICollectionView * photoCollectionView;
-    
     UILabel * numLab;
     UIView * numLabShadowView;
+    BKBrowserIndicator * saveIndicator;
 }
+
+@property (nonatomic,strong) UICollectionView * photoCollectionView;
 
 @end
 
@@ -45,7 +48,7 @@
 
 -(void)initSubView
 {
-    [self initCollectionView];
+    [self addSubview:self.photoCollectionView];
     
     if (_localImageArr) {
         if ([_localImageArr count] != 1) {
@@ -55,6 +58,8 @@
             numLab.textColor = [UIColor whiteColor];
             numLab.text = [NSString stringWithFormat:@"%ld/%ld",_selectNum+1,[_localImageArr count]];
             [self addSubview:numLab];
+            
+            [self initNumLabShadowView];
         }
     }else{
         if ([_thumbImageArr count] != 1) {
@@ -65,29 +70,94 @@
             numLab.text = [NSString stringWithFormat:@"%ld/%ld",_selectNum+1,[_thumbImageArr count]];
             [self addSubview:numLab];
             
+            [self initNumLabShadowView];
+            
             [numLab addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
         }
     }
     
-//    numLabShadowView = [[UIView alloc]init];
-//    numLabShadowView
+    UIButton * saveBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    saveBtn.frame = CGRectMake(15, self.frame.size.height - 60, 80, 40);
+    [saveBtn setTitle:@"保存" forState:UIControlStateNormal];
+    saveBtn.titleLabel.font = [UIFont systemFontOfSize:15];
+    saveBtn.backgroundColor = [UIColor colorWithRed:0.1f green:0.1f blue:0.1f alpha:0.90f];
+    saveBtn.layer.cornerRadius = 5;
+    saveBtn.clipsToBounds = YES;
+    [saveBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [saveBtn addTarget:self action:@selector(saveBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [self addSubview:saveBtn];
 }
 
--(void)initCollectionView
+-(void)initNumLabShadowView
 {
-    BKPhotoCollectionViewFlowLayout * flowLayout = [[BKPhotoCollectionViewFlowLayout alloc]init];
-    flowLayout.allImageCount = [_thumbImageArr count];
+    CGFloat width = [numLab.text boundingRectWithSize:CGSizeMake(MAXFLOAT, numLab.frame.size.height) options: NSStringDrawingUsesFontLeading | NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:numLab.font} context:nil].size.width + 30;
     
-    photoCollectionView = [[UICollectionView alloc]initWithFrame:CGRectMake(-BKPhotoBrowser_ImageViewMargin, 0, self.frame.size.width+BKPhotoBrowser_ImageViewMargin*2, self.frame.size.height) collectionViewLayout:flowLayout];
-    photoCollectionView.delegate = self;
-    photoCollectionView.dataSource = self;
-    photoCollectionView.backgroundColor = [UIColor clearColor];
-    photoCollectionView.showsVerticalScrollIndicator = NO;
-    photoCollectionView.hidden = YES;
-    photoCollectionView.pagingEnabled = YES;
-    [self addSubview:photoCollectionView];
+    numLabShadowView = [[UIView alloc]initWithFrame:CGRectMake((self.frame.size.width - width)/2.0f, 0, width, numLab.frame.size.height+10)];
+    numLabShadowView.backgroundColor = [UIColor colorWithWhite:0 alpha:0.6];
+    numLabShadowView.layer.cornerRadius = numLabShadowView.frame.size.height/2.0f;
+    numLabShadowView.clipsToBounds = YES;
+    [self addSubview:numLabShadowView];
     
-    [photoCollectionView registerClass:[BKBrowserImageView class] forCellWithReuseIdentifier:Photo_CollectionView_Identifier];
+    CGPoint center = numLabShadowView.center;
+    center.y = numLab.center.y;
+    numLabShadowView.center = center;
+    
+    [self bringSubviewToFront:numLab];
+}
+
+-(void)saveBtnClick:(UIButton*)button
+{
+    NSMutableString * string = [NSMutableString stringWithString:numLab?numLab.text:@"1/1"];
+    NSInteger item = [[[string componentsSeparatedByString:@"/"] firstObject] integerValue]-1;
+    BKBrowserImageView * cell = (BKBrowserImageView*)[_photoCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForItem:item inSection:0]];
+    
+    UIImageWriteToSavedPhotosAlbum(cell.showImageView.image, self, @selector(image:didFinishSavingWithError:contextInfo:), NULL);
+    
+    saveIndicator = [[BKBrowserIndicator alloc] initWithFrame:self.bounds];
+    [[UIApplication sharedApplication].keyWindow addSubview:saveIndicator];
+    [saveIndicator startAnimation];
+}
+
+- (void)image:(UIImage *)image didFinishSavingWithError:(NSError *)error contextInfo:(void *)contextInfo;
+{
+    [saveIndicator stopAnimation];
+    
+    UILabel *label = [[UILabel alloc] init];
+    label.textColor = [UIColor whiteColor];
+    label.backgroundColor = [UIColor colorWithRed:0.1f green:0.1f blue:0.1f alpha:0.90f];
+    label.layer.cornerRadius = 5;
+    label.clipsToBounds = YES;
+    label.bounds = CGRectMake(0, 0, 100, 30);
+    label.center = self.center;
+    label.textAlignment = NSTextAlignmentCenter;
+    label.font = [UIFont boldSystemFontOfSize:17];
+    [[UIApplication sharedApplication].keyWindow addSubview:label];
+    [[UIApplication sharedApplication].keyWindow bringSubviewToFront:label];
+    if (error) {
+        label.text = @"保存失败";
+    }   else {
+        label.text = @"保存成功";
+    }
+    [label performSelector:@selector(removeFromSuperview) withObject:nil afterDelay:1.0];
+}
+
+-(UICollectionView*)photoCollectionView
+{
+    if (!_photoCollectionView) {
+        BKPhotoCollectionViewFlowLayout * flowLayout = [[BKPhotoCollectionViewFlowLayout alloc]init];
+        flowLayout.allImageCount = [_thumbImageArr count];
+        
+        _photoCollectionView = [[UICollectionView alloc]initWithFrame:CGRectMake(-BKPhotoBrowser_ImageViewMargin, 0, self.frame.size.width+BKPhotoBrowser_ImageViewMargin*2, self.frame.size.height) collectionViewLayout:flowLayout];
+        _photoCollectionView.delegate = self;
+        _photoCollectionView.dataSource = self;
+        _photoCollectionView.backgroundColor = [UIColor clearColor];
+        _photoCollectionView.showsVerticalScrollIndicator = NO;
+        _photoCollectionView.hidden = YES;
+        _photoCollectionView.pagingEnabled = YES;
+        
+        [_photoCollectionView registerClass:[BKBrowserImageView class] forCellWithReuseIdentifier:Photo_CollectionView_Identifier];
+    }
+    return _photoCollectionView;
 }
 
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context
@@ -96,7 +166,20 @@
         
         if (![change[@"new"] isEqualToString:change[@"old"]]) {
             
-            [self getNetworkOriginalImage];
+            CGFloat width = [numLab.text boundingRectWithSize:CGSizeMake(MAXFLOAT, numLab.frame.size.height) options: NSStringDrawingUsesFontLeading | NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:numLab.font} context:nil].size.width + 30;
+            
+            CGRect numLabShadowViewRect = numLabShadowView.frame;
+            numLabShadowViewRect.size.width = width;
+            numLabShadowViewRect.origin.x = (self.frame.size.width - width)/2.0f;
+            numLabShadowView.frame = numLabShadowViewRect;
+            
+            NSInteger num = [[change[@"new"] componentsSeparatedByString:@"/"][0] integerValue]-1;
+            
+            NSURL * originalImageUrl = [NSURL URLWithString:_originalImageArr[num]];
+            SDWebImageManager *manager = [SDWebImageManager sharedManager];
+            if (![manager diskImageExistsForURL:originalImageUrl]) {
+                [self getNetworkOriginalImage];
+            }
         }
     }
 }
@@ -121,9 +204,8 @@
     
     if (!_localImageArr) {
         NSURL * originalImageUrl = [NSURL URLWithString:_originalImageArr[_selectNum]];
-        
+    
         SDWebImageManager *manager = [SDWebImageManager sharedManager];
-        [manager diskImageExistsForURL:originalImageUrl];
         if ([manager diskImageExistsForURL:originalImageUrl]) {
             UIImage * image = [[manager imageCache] imageFromDiskCacheForKey:originalImageUrl.absoluteString];
             imageView.image = image;
@@ -139,13 +221,19 @@
         
         CGRect showImageViewFrame = imageView.frame;
         
-        if (imageView.image.size.width>self.frame.size.width) {
-            showImageViewFrame.size.width = self.frame.size.width;
-            CGFloat scale = imageView.image.size.width/self.frame.size.width;
-            showImageViewFrame.size.height = imageView.image.size.height/scale;
+        if (!_localImageArr) {
+            
+            NSURL * originalImageUrl = [NSURL URLWithString:_originalImageArr[_selectNum]];
+            
+            SDWebImageManager *manager = [SDWebImageManager sharedManager];
+            if ([manager diskImageExistsForURL:originalImageUrl]) {
+                showImageViewFrame = [self imageView:imageView editImageViewSizeWithWidth:self.frame.size.width];
+            }else{
+                CGFloat image_max_width = self.frame.size.width*reduce;
+                showImageViewFrame = [self imageView:imageView editImageViewSizeWithWidth:image_max_width];
+            }
         }else{
-            showImageViewFrame.size.width = imageView.image.size.width;
-            showImageViewFrame.size.height = imageView.image.size.height;
+            showImageViewFrame = [self imageView:imageView editImageViewSizeWithWidth:self.frame.size.width];
         }
         
         imageView.frame = showImageViewFrame;
@@ -157,9 +245,9 @@
         imageView.hidden = YES;
         [imageView removeFromSuperview];
         
-        [photoCollectionView setContentOffset:CGPointMake((self.frame.size.width+2*BKPhotoBrowser_ImageViewMargin)*_selectNum, 0) animated:NO];
+        [_photoCollectionView setContentOffset:CGPointMake((self.frame.size.width+2*BKPhotoBrowser_ImageViewMargin)*_selectNum, 0) animated:NO];
         
-        photoCollectionView.hidden = NO;
+        _photoCollectionView.hidden = NO;
         [self getNetworkOriginalImage];
     }];
 }
@@ -181,28 +269,50 @@
     return image;
 }
 
+-(CGRect)imageView:(UIImageView*)imageView editImageViewSizeWithWidth:(CGFloat)width
+{
+    CGRect rect = imageView.frame;
+    if (imageView.image.size.width>width) {
+        rect.size.width = width;
+        CGFloat scale = imageView.image.size.width/width;
+        rect.size.height = imageView.image.size.height/scale;
+    }else{
+        rect.size.width = imageView.image.size.width;
+        rect.size.height = imageView.image.size.height;
+    }
+    return rect;
+}
+
+/**
+ *  获取原图
+ */
 -(void)getNetworkOriginalImage
 {
-    NSMutableString * string = [NSMutableString stringWithString:numLab.text];
+    NSMutableString * string = [NSMutableString stringWithString:numLab?numLab.text:@"1/1"];
     NSInteger item = [[[string componentsSeparatedByString:@"/"] firstObject] integerValue]-1;
     
-    BKBrowserImageView * cell = (BKBrowserImageView*)[photoCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForItem:item inSection:0]];
+    BKBrowserImageView * cell = (BKBrowserImageView*)[_photoCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForItem:item inSection:0]];
     
-    if (cell.imageScrollView.zoomScale == 1) {
-        UIActivityIndicatorView * indicatorView = [[UIActivityIndicatorView alloc]initWithFrame:cell.frame];
-        indicatorView.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhite;
-        [cell addSubview:indicatorView];
-        
+    if (cell.imageScrollView.zoomScale == reduce) {
         if (cell) {
+            BKBrowserIndicator * indicator = [[BKBrowserIndicator alloc]initWithFrame:cell.frame];
+            [_photoCollectionView addSubview:indicator];
+            [indicator startAnimation];
+            
             [cell.showImageView sd_setImageWithURL:[NSURL URLWithString:_originalImageArr[item]] placeholderImage:cell.showImageView.image options:0 progress:^(NSInteger receivedSize, NSInteger expectedSize) {
                 
-                [indicatorView startAnimating];
-                
             } completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
-                [indicatorView stopAnimating];
-                [indicatorView removeFromSuperview];
                 
-                [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
+                [indicator stopAnimation];
+                
+                if (!error) {
+                    
+                    cell.showImageView.transform = CGAffineTransformMakeScale(1, 1);
+                    cell.showImageView.userInteractionEnabled = YES;
+                    
+                    [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
+                    
+                }
             }];
         }
     }
@@ -225,28 +335,41 @@
     cell.imageScrollView.contentSize = CGSizeMake(cell.frame.size.width-BKPhotoBrowser_ImageViewMargin*2, cell.frame.size.height);
     
     cell.showImageView.transform = CGAffineTransformMakeScale(1, 1);
+    cell.showImageView.userInteractionEnabled = YES;
     
     if (_localImageArr) {
         
         UIImage * image = _thumbImageArr[indexPath.row];
         [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
-        
     }else{
         
         NSURL * originalImageUrl = [NSURL URLWithString:_originalImageArr[indexPath.row]];
         
         SDWebImageManager *manager = [SDWebImageManager sharedManager];
-        [manager diskImageExistsForURL:originalImageUrl];
-        
         if ([manager diskImageExistsForURL:originalImageUrl]) {
             
-            UIImage * image = [[manager imageCache] imageFromDiskCacheForKey:originalImageUrl.absoluteString];
-            [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
+            UIImage * originalImage = [[manager imageCache] imageFromDiskCacheForKey:originalImageUrl.absoluteString];
+            [self editImageView:cell.showImageView image:originalImage scrollView:cell.imageScrollView];
             
         }else{
-            [cell.showImageView sd_setImageWithURL:[NSURL URLWithString:_thumbImageArr[indexPath.row]] completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
-                [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
-            }];
+            
+            NSURL * thumbImageUrl = [NSURL URLWithString:_thumbImageArr[indexPath.row]];
+            if ([manager diskImageExistsForURL:thumbImageUrl]) {
+                
+                UIImage * thumbImage = [[manager imageCache] imageFromDiskCacheForKey:thumbImageUrl.absoluteString];
+                [self editImageView:cell.showImageView image:thumbImage scrollView:cell.imageScrollView];
+                
+                cell.showImageView.transform = CGAffineTransformMakeScale(reduce, reduce);
+                cell.showImageView.userInteractionEnabled = NO;
+                
+            }else{
+                [cell.showImageView sd_setImageWithURL:[NSURL URLWithString:_thumbImageArr[indexPath.row]] completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
+                    [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
+                    
+                    cell.showImageView.transform = CGAffineTransformMakeScale(reduce, reduce);
+                    cell.showImageView.userInteractionEnabled = NO;
+                }];
+            }
         }
     }
     
@@ -315,10 +438,10 @@
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView
 {
-    if (scrollView == photoCollectionView) {
+    if (scrollView == _photoCollectionView) {
         
-        CGPoint pInView = [self convertPoint:photoCollectionView.center toView:photoCollectionView];
-        NSIndexPath *indexPathNow = [photoCollectionView indexPathForItemAtPoint:pInView];
+        CGPoint pInView = [self convertPoint:_photoCollectionView.center toView:_photoCollectionView];
+        NSIndexPath *indexPathNow = [_photoCollectionView indexPathForItemAtPoint:pInView];
         NSInteger item = indexPathNow.row;
         
         if (_localImageArr) {

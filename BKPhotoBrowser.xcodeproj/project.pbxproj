@@ -30,6 +30,7 @@
 		88316E691D4615E000F4E5E7 /* UIImageView+HighlightedWebCache.m in Sources */ = {isa = PBXBuildFile; fileRef = 88316E591D4615E000F4E5E7 /* UIImageView+HighlightedWebCache.m */; };
 		88316E6A1D4615E000F4E5E7 /* UIImageView+WebCache.m in Sources */ = {isa = PBXBuildFile; fileRef = 88316E5B1D4615E000F4E5E7 /* UIImageView+WebCache.m */; };
 		88316E6B1D4615E000F4E5E7 /* UIView+WebCacheOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 88316E5D1D4615E000F4E5E7 /* UIView+WebCacheOperation.m */; };
+		885C48B01D7923AE00EB700A /* BKBrowserIndicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 885C48AF1D7923AE00EB700A /* BKBrowserIndicator.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -79,6 +80,8 @@
 		88316E5B1D4615E000F4E5E7 /* UIImageView+WebCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImageView+WebCache.m"; sourceTree = "<group>"; };
 		88316E5C1D4615E000F4E5E7 /* UIView+WebCacheOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+WebCacheOperation.h"; sourceTree = "<group>"; };
 		88316E5D1D4615E000F4E5E7 /* UIView+WebCacheOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+WebCacheOperation.m"; sourceTree = "<group>"; };
+		885C48AE1D7923AE00EB700A /* BKBrowserIndicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BKBrowserIndicator.h; sourceTree = "<group>"; };
+		885C48AF1D7923AE00EB700A /* BKBrowserIndicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BKBrowserIndicator.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,6 +147,8 @@
 				2A125A741D450A5600400E9E /* BKPhotoCollectionViewFlowLayout.m */,
 				2A125A6D1D44B8C200400E9E /* BKBrowserImageView.h */,
 				2A125A6E1D44B8C200400E9E /* BKBrowserImageView.m */,
+				885C48AE1D7923AE00EB700A /* BKBrowserIndicator.h */,
+				885C48AF1D7923AE00EB700A /* BKBrowserIndicator.m */,
 			);
 			path = BKPhotoBrowser;
 			sourceTree = "<group>";
@@ -266,6 +271,7 @@
 				88316E661D4615E000F4E5E7 /* UIButton+WebCache.m in Sources */,
 				88316E681D4615E000F4E5E7 /* UIImage+MultiFormat.m in Sources */,
 				88316E6A1D4615E000F4E5E7 /* UIImageView+WebCache.m in Sources */,
+				885C48B01D7923AE00EB700A /* BKBrowserIndicator.m in Sources */,
 				2A125A6F1D44B8C200400E9E /* BKBrowserImageView.m in Sources */,
 				88316E6B1D4615E000F4E5E7 /* UIView+WebCacheOperation.m in Sources */,
 				88316E631D4615E000F4E5E7 /* SDWebImageDownloaderOperation.m in Sources */,

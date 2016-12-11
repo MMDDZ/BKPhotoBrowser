@@ -6,10 +6,14 @@
  * file that was distributed with this source code.
  */
 
-#import <Foundation/Foundation.h>
+#ifdef SD_WEBP
 
-@protocol SDWebImageOperation <NSObject>
+#import "SDWebImageCompat.h"
 
-- (void)cancel;
+@interface UIImage (WebP)
+
++ (nullable UIImage *)sd_imageWithWebPData:(nullable NSData *)data;
 
 @end
+
+#endif

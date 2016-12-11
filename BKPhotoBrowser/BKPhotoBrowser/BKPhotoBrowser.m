@@ -30,6 +30,39 @@
 
 @implementation BKPhotoBrowser
 
+-(void)imageIsDiskUrl:(NSString*)url complete:(void (^)(BOOL flag))complete
+{
+    [[SDWebImageManager sharedManager] diskImageExistsForURL:[NSURL URLWithString:url] completion:^(BOOL isInCache) {
+        if (complete) {
+            complete(isInCache);
+        }
+    }];
+}
+
+-(UIImage*)takeImageInDiskWithUrl:(NSString*)url
+{
+    return [[[SDWebImageManager sharedManager] imageCache] imageFromDiskCacheForKey:url];
+}
+
+-(void)setThumbImageArr:(NSArray *)thumbImageArr
+{
+    _thumbImageArr = thumbImageArr;
+    
+}
+
+-(void)setOriginalImageArr:(NSArray *)originalImageArr
+{
+//    __block NSMutableArray * array = [NSMutableArray arrayWithArray:originalImageArr];
+//    [originalImageArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+//        [self imageIsDiskUrl:obj complete:^(BOOL flag) {
+//            if (flag) {
+//                [array replaceObjectAtIndex:idx withObject:[self takeImageInDiskWithUrl:obj]];
+//            }
+//        }];
+//    }];
+    _originalImageArr = originalImageArr;
+}
+
 -(void)dealloc
 {
     if ([_thumbImageArr count] != 1 && [_thumbImageArr count] > 0) {
@@ -45,6 +78,8 @@
     }
     return self;
 }
+
+#pragma mark - 保存 & titleNum
 
 -(void)initSubView
 {
@@ -86,6 +121,30 @@
     [saveBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [saveBtn addTarget:self action:@selector(saveBtnClick:) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:saveBtn];
+}
+
+-(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context
+{
+    if ([object isEqual:numLab] && [keyPath isEqual:@"text"]) {
+        
+        if (![change[@"new"] isEqualToString:change[@"old"]]) {
+            
+            CGFloat width = [numLab.text boundingRectWithSize:CGSizeMake(MAXFLOAT, numLab.frame.size.height) options: NSStringDrawingUsesFontLeading | NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:numLab.font} context:nil].size.width + 30;
+            
+            CGRect numLabShadowViewRect = numLabShadowView.frame;
+            numLabShadowViewRect.size.width = width;
+            numLabShadowViewRect.origin.x = (self.frame.size.width - width)/2.0f;
+            numLabShadowView.frame = numLabShadowViewRect;
+            
+//            NSInteger num = [[change[@"new"] componentsSeparatedByString:@"/"][0] integerValue]-1;
+            
+//            [self imageIsDiskUrl:_originalImageArr[num] complete:^(BOOL flag) {
+//                if (!flag) {
+//                    [self getNetworkOriginalImage];
+//                }
+//            }];
+        }
+    }
 }
 
 -(void)initNumLabShadowView
@@ -141,48 +200,7 @@
     [label performSelector:@selector(removeFromSuperview) withObject:nil afterDelay:1.0];
 }
 
--(UICollectionView*)photoCollectionView
-{
-    if (!_photoCollectionView) {
-        BKPhotoCollectionViewFlowLayout * flowLayout = [[BKPhotoCollectionViewFlowLayout alloc]init];
-        flowLayout.allImageCount = [_thumbImageArr count];
-        
-        _photoCollectionView = [[UICollectionView alloc]initWithFrame:CGRectMake(-BKPhotoBrowser_ImageViewMargin, 0, self.frame.size.width+BKPhotoBrowser_ImageViewMargin*2, self.frame.size.height) collectionViewLayout:flowLayout];
-        _photoCollectionView.delegate = self;
-        _photoCollectionView.dataSource = self;
-        _photoCollectionView.backgroundColor = [UIColor clearColor];
-        _photoCollectionView.showsVerticalScrollIndicator = NO;
-        _photoCollectionView.hidden = YES;
-        _photoCollectionView.pagingEnabled = YES;
-        
-        [_photoCollectionView registerClass:[BKBrowserImageView class] forCellWithReuseIdentifier:Photo_CollectionView_Identifier];
-    }
-    return _photoCollectionView;
-}
-
--(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context
-{
-    if ([object isEqual:numLab] && [keyPath isEqual:@"text"]) {
-        
-        if (![change[@"new"] isEqualToString:change[@"old"]]) {
-            
-            CGFloat width = [numLab.text boundingRectWithSize:CGSizeMake(MAXFLOAT, numLab.frame.size.height) options: NSStringDrawingUsesFontLeading | NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:numLab.font} context:nil].size.width + 30;
-            
-            CGRect numLabShadowViewRect = numLabShadowView.frame;
-            numLabShadowViewRect.size.width = width;
-            numLabShadowViewRect.origin.x = (self.frame.size.width - width)/2.0f;
-            numLabShadowView.frame = numLabShadowViewRect;
-            
-            NSInteger num = [[change[@"new"] componentsSeparatedByString:@"/"][0] integerValue]-1;
-            
-            NSURL * originalImageUrl = [NSURL URLWithString:_originalImageArr[num]];
-            SDWebImageManager *manager = [SDWebImageManager sharedManager];
-            if (![manager diskImageExistsForURL:originalImageUrl]) {
-                [self getNetworkOriginalImage];
-            }
-        }
-    }
-}
+#pragma mark - 显示方法
 
 -(void)showInView:(UIView *)view
 {
@@ -201,55 +219,23 @@
     CGRect parentRect = [view.superview convertRect:view.frame toView:self];
     
     UIImageView * imageView = [[UIImageView alloc]initWithFrame:parentRect];
-    
-    if (!_localImageArr) {
-        NSURL * originalImageUrl = [NSURL URLWithString:_originalImageArr[_selectNum]];
-    
-        SDWebImageManager *manager = [SDWebImageManager sharedManager];
-        if ([manager diskImageExistsForURL:originalImageUrl]) {
-            UIImage * image = [[manager imageCache] imageFromDiskCacheForKey:originalImageUrl.absoluteString];
-            imageView.image = image;
-        }else{
-            imageView.image = [self getSelectImageWithView:view];
-        }
-    }else{
-        imageView.image = [self getSelectImageWithView:view];
-    }
     [self addSubview:imageView];
     
-    [UIView animateWithDuration:0.5 animations:^{
+    if (!_localImageArr) {
         
-        CGRect showImageViewFrame = imageView.frame;
-        
-        if (!_localImageArr) {
-            
-            NSURL * originalImageUrl = [NSURL URLWithString:_originalImageArr[_selectNum]];
-            
-            SDWebImageManager *manager = [SDWebImageManager sharedManager];
-            if ([manager diskImageExistsForURL:originalImageUrl]) {
-                showImageViewFrame = [self imageView:imageView editImageViewSizeWithWidth:self.frame.size.width];
+        [self imageIsDiskUrl:_originalImageArr[_selectNum] complete:^(BOOL flag) {
+            if (flag) {
+                imageView.image = [self takeImageInDiskWithUrl:_originalImageArr[_selectNum]];
             }else{
-                CGFloat image_max_width = self.frame.size.width*reduce;
-                showImageViewFrame = [self imageView:imageView editImageViewSizeWithWidth:image_max_width];
+                imageView.image = [self getSelectImageWithView:view];
             }
-        }else{
-            showImageViewFrame = [self imageView:imageView editImageViewSizeWithWidth:self.frame.size.width];
-        }
-        
-        imageView.frame = showImageViewFrame;
-        
-        imageView.center = self.center;
-        
-    } completion:^(BOOL finished) {
-        
-        imageView.hidden = YES;
-        [imageView removeFromSuperview];
-        
-        [_photoCollectionView setContentOffset:CGPointMake((self.frame.size.width+2*BKPhotoBrowser_ImageViewMargin)*_selectNum, 0) animated:NO];
-        
-        _photoCollectionView.hidden = NO;
-        [self getNetworkOriginalImage];
-    }];
+            [self moveAnimateWithImageView:imageView];
+        }];
+
+    }else{
+        imageView.image = [self getSelectImageWithView:view];
+        [self moveAnimateWithImageView:imageView];
+    }
 }
 
 -(UIImage*)getSelectImageWithView:(UIView*)view
@@ -267,6 +253,28 @@
         }
     }
     return image;
+}
+
+-(void)moveAnimateWithImageView:(UIImageView*)imageView
+{
+    [UIView animateWithDuration:0.35 animations:^{
+        
+        CGRect showImageViewFrame = imageView.frame;
+        showImageViewFrame = [self imageView:imageView editImageViewSizeWithWidth:self.frame.size.width];
+        imageView.frame = showImageViewFrame;
+        imageView.center = self.center;
+        
+    } completion:^(BOOL finished) {
+        
+        [_photoCollectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:_selectNum inSection:0] atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];
+        
+        _photoCollectionView.hidden = NO;
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            imageView.hidden = YES;
+            [imageView removeFromSuperview];
+        });
+    }];
 }
 
 -(CGRect)imageView:(UIImageView*)imageView editImageViewSizeWithWidth:(CGFloat)width
@@ -299,10 +307,7 @@
             [_photoCollectionView addSubview:indicator];
             [indicator startAnimation];
             
-            [cell.showImageView sd_setImageWithURL:[NSURL URLWithString:_originalImageArr[item]] placeholderImage:cell.showImageView.image options:0 progress:^(NSInteger receivedSize, NSInteger expectedSize) {
-                
-            } completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
-                
+            [cell.showImageView sd_setImageWithURL:[NSURL URLWithString:_originalImageArr[item]] placeholderImage:cell.showImageView.image completed:^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
                 [indicator stopAnimation];
                 
                 if (!error) {
@@ -316,6 +321,27 @@
             }];
         }
     }
+}
+
+#pragma mark - 相册
+
+-(UICollectionView*)photoCollectionView
+{
+    if (!_photoCollectionView) {
+        BKPhotoCollectionViewFlowLayout * flowLayout = [[BKPhotoCollectionViewFlowLayout alloc]init];
+        flowLayout.allImageCount = [_thumbImageArr count];
+        
+        _photoCollectionView = [[UICollectionView alloc]initWithFrame:CGRectMake(-BKPhotoBrowser_ImageViewMargin, 0, self.frame.size.width+BKPhotoBrowser_ImageViewMargin*2, self.frame.size.height) collectionViewLayout:flowLayout];
+        _photoCollectionView.delegate = self;
+        _photoCollectionView.dataSource = self;
+        _photoCollectionView.backgroundColor = [UIColor clearColor];
+        _photoCollectionView.showsVerticalScrollIndicator = NO;
+        _photoCollectionView.hidden = YES;
+        _photoCollectionView.pagingEnabled = YES;
+        
+        [_photoCollectionView registerClass:[BKBrowserImageView class] forCellWithReuseIdentifier:Photo_CollectionView_Identifier];
+    }
+    return _photoCollectionView;
 }
 
 #pragma mark - UICollectionViewCell
@@ -343,33 +369,51 @@
         [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
     }else{
         
-        NSURL * originalImageUrl = [NSURL URLWithString:_originalImageArr[indexPath.row]];
-        
-        SDWebImageManager *manager = [SDWebImageManager sharedManager];
-        if ([manager diskImageExistsForURL:originalImageUrl]) {
-            
-            UIImage * originalImage = [[manager imageCache] imageFromDiskCacheForKey:originalImageUrl.absoluteString];
-            [self editImageView:cell.showImageView image:originalImage scrollView:cell.imageScrollView];
-            
+        id obj = self.originalImageArr[indexPath.item];
+        if ([obj isKindOfClass:[UIImage class]]) {
+            [self editImageView:cell.showImageView image:obj scrollView:cell.imageScrollView];
         }else{
-            
-            NSURL * thumbImageUrl = [NSURL URLWithString:_thumbImageArr[indexPath.row]];
-            if ([manager diskImageExistsForURL:thumbImageUrl]) {
-                
-                UIImage * thumbImage = [[manager imageCache] imageFromDiskCacheForKey:thumbImageUrl.absoluteString];
-                [self editImageView:cell.showImageView image:thumbImage scrollView:cell.imageScrollView];
-                
-                cell.showImageView.transform = CGAffineTransformMakeScale(reduce, reduce);
-                cell.showImageView.userInteractionEnabled = NO;
-                
-            }else{
-                [cell.showImageView sd_setImageWithURL:[NSURL URLWithString:_thumbImageArr[indexPath.row]] completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
-                    [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
+            [self imageIsDiskUrl:obj complete:^(BOOL flag) {
+                if (flag) {
+                    UIImage * originalImage = [self takeImageInDiskWithUrl:_originalImageArr[indexPath.item]];
+                    NSMutableArray * originalImageArr = [self.originalImageArr mutableCopy];
+                    [originalImageArr replaceObjectAtIndex:indexPath.item withObject:originalImage];
+                    self.originalImageArr = originalImageArr.copy;
+                    [self editImageView:cell.showImageView image:originalImage scrollView:cell.imageScrollView];
+                }else{
                     
-                    cell.showImageView.transform = CGAffineTransformMakeScale(reduce, reduce);
                     cell.showImageView.userInteractionEnabled = NO;
-                }];
-            }
+                    
+                    id obj = self.thumbImageArr[indexPath.item];
+                    if ([obj isKindOfClass:[UIImage class]]) {
+                        [self editImageView:cell.showImageView image:obj scrollView:cell.imageScrollView];
+                        [self getNetworkOriginalImage];
+                    }else{
+                        [self imageIsDiskUrl:obj complete:^(BOOL flag) {
+                            if (flag) {
+                                UIImage * thumbImage = [self takeImageInDiskWithUrl:_thumbImageArr[indexPath.item]];
+                                NSMutableArray * thumbImageArr = [self.thumbImageArr mutableCopy];
+                                [thumbImageArr replaceObjectAtIndex:indexPath.item withObject:thumbImage];
+                                self.thumbImageArr = thumbImageArr.copy;
+                                [self editImageView:cell.showImageView image:thumbImage scrollView:cell.imageScrollView];
+                                [self getNetworkOriginalImage];
+                            }else{
+                                [cell.showImageView sd_setImageWithURL:[NSURL URLWithString:_thumbImageArr[indexPath.row]] completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
+                                    
+                                    NSMutableArray * thumbImageArr = [self.thumbImageArr mutableCopy];
+                                    [thumbImageArr replaceObjectAtIndex:indexPath.item withObject:image];
+                                    self.thumbImageArr = thumbImageArr.copy;
+                                    
+                                    [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
+                                    
+                                    [self getNetworkOriginalImage];
+                                }];
+                            }
+                        }];
+                    }
+                    
+                }
+            }];
         }
     }
     

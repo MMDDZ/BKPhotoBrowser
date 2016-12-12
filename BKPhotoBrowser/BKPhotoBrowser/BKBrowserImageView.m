@@ -34,7 +34,6 @@
         
         _showImageView = [[UIImageView alloc]init];
         _showImageView.userInteractionEnabled = YES;
-        _showImageView.tag = 1;
         [_imageScrollView addSubview:_showImageView];
         
     }

@@ -92,10 +92,10 @@
     }
     
     UIButton * saveBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-    saveBtn.frame = CGRectMake(15, self.frame.size.height - 60, 80, 40);
+    saveBtn.frame = CGRectMake(self.frame.size.width - 100, self.frame.size.height - 60, 80, 40);
     [saveBtn setTitle:@"保存" forState:UIControlStateNormal];
     saveBtn.titleLabel.font = [UIFont systemFontOfSize:15];
-    saveBtn.backgroundColor = [UIColor colorWithRed:0.1f green:0.1f blue:0.1f alpha:0.90f];
+    saveBtn.backgroundColor = [UIColor colorWithRed:0.1f green:0.1f blue:0.1f alpha:0.60f];
     saveBtn.layer.cornerRadius = 5;
     saveBtn.clipsToBounds = YES;
     [saveBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
@@ -116,10 +116,13 @@
             numLabShadowViewRect.origin.x = (self.frame.size.width - width)/2.0f;
             numLabShadowView.frame = numLabShadowViewRect;
             
-            NSInteger num = [[change[@"new"] componentsSeparatedByString:@"/"][0] integerValue]-1;
+            NSInteger item = [[change[@"new"] componentsSeparatedByString:@"/"][0] integerValue]-1;
             
-            if (![self.originalImageArr[num] isKindOfClass:[UIImage class]]) {
-                [self getNetworkOriginalImageWithItem:num];
+            if (![self.originalImageArr[item] isKindOfClass:[UIImage class]]) {
+                [self getNetworkOriginalImageWithItem:item];
+            }else{
+                BKBrowserImageView * cell = (BKBrowserImageView*)[_photoCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForItem:item inSection:0]];
+                cell.showImageView.transform = CGAffineTransformMakeScale(1, 1);
             }
         }
     }
@@ -186,10 +189,10 @@
     self.frame = window.bounds;
     [window addSubview:self];
     
-    [self initSubView];
-    
     [UIApplication sharedApplication].statusBarHidden = YES;
     [self showFirstImageViewInView:view];
+    
+    [self initSubView];
 }
 
 -(void)showFirstImageViewInView:(UIView*)view
@@ -275,6 +278,7 @@
 -(void)getNetworkOriginalImageWithItem:(NSInteger)item
 {
     BKBrowserImageView * cell = (BKBrowserImageView*)[_photoCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForItem:item inSection:0]];
+    cell.showImageView.transform = CGAffineTransformMakeScale(1, 1);
     
     if (cell) {
         BKBrowserIndicator * indicator = [[BKBrowserIndicator alloc]initWithFrame:cell.frame];
@@ -285,8 +289,6 @@
             [indicator stopAnimation];
             
             if (!error) {
-                
-                cell.showImageView.transform = CGAffineTransformMakeScale(1, 1);
                 
                 NSMutableArray * originalImageArr = [self.originalImageArr mutableCopy];
                 [originalImageArr replaceObjectAtIndex:item withObject:image];

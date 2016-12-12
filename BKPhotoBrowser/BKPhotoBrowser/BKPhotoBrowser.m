@@ -308,8 +308,7 @@
                 [originalImageArr replaceObjectAtIndex:item withObject:image];
                 self.originalImageArr = originalImageArr.copy;
                 [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
-                
-                cell.imageScrollView.maximumZoomScale = 2;
+    
             }
         }];
     }
@@ -355,17 +354,12 @@
     cell.showImageView.transform = CGAffineTransformMakeScale(1, 1);
     
     if (_localImageArr) {
-        
         UIImage * image = _thumbImageArr[indexPath.row];
         [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
     }else{
-        
         id obj = self.originalImageArr[indexPath.item];
         if ([obj isKindOfClass:[UIImage class]]) {
             [self editImageView:cell.showImageView image:obj scrollView:cell.imageScrollView];
-            
-            cell.imageScrollView.maximumZoomScale = 2;
-            
         }else{
             [self imageIsDiskUrl:obj complete:^(BOOL flag) {
                 if (flag) {
@@ -374,8 +368,6 @@
                     [originalImageArr replaceObjectAtIndex:indexPath.item withObject:originalImage];
                     self.originalImageArr = originalImageArr.copy;
                     [self editImageView:cell.showImageView image:originalImage scrollView:cell.imageScrollView];
-                    
-                    cell.imageScrollView.maximumZoomScale = 2;
                 }else{
                     
                     id obj = self.thumbImageArr[indexPath.item];
@@ -435,7 +427,7 @@
         showImageViewFrame.origin.x = 0;
         showImageViewFrame.origin.y = (imageScrollView.frame.size.height-showImageViewFrame.size.height)/2.0f;
         
-        imageScrollView.maximumZoomScale = scale;
+//        imageScrollView.maximumZoomScale = scale;
 //    }else{
 //        
 //        showImageViewFrame.origin.x = (imageScrollView.frame.size.width - image.size.width)/2.0f;

@@ -23,6 +23,8 @@
     BKBrowserIndicator * saveIndicator;
 }
 
+@property (nonatomic,strong) UIButton * saveBtn;
+
 @property (nonatomic,strong) UICollectionView * photoCollectionView;
 
 @end
@@ -91,16 +93,24 @@
         }
     }
     
-    UIButton * saveBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-    saveBtn.frame = CGRectMake(self.frame.size.width - 100, self.frame.size.height - 60, 80, 40);
-    [saveBtn setTitle:@"保存" forState:UIControlStateNormal];
-    saveBtn.titleLabel.font = [UIFont systemFontOfSize:15];
-    saveBtn.backgroundColor = [UIColor colorWithRed:0.1f green:0.1f blue:0.1f alpha:0.60f];
-    saveBtn.layer.cornerRadius = 5;
-    saveBtn.clipsToBounds = YES;
-    [saveBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [saveBtn addTarget:self action:@selector(saveBtnClick:) forControlEvents:UIControlEventTouchUpInside];
-    [self addSubview:saveBtn];
+    [self addSubview:[self saveBtn]];
+}
+
+-(void)initNumLabShadowView
+{
+    CGFloat width = [numLab.text boundingRectWithSize:CGSizeMake(MAXFLOAT, numLab.frame.size.height) options: NSStringDrawingUsesFontLeading | NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:numLab.font} context:nil].size.width + 30;
+    
+    numLabShadowView = [[UIView alloc]initWithFrame:CGRectMake((self.frame.size.width - width)/2.0f, 0, width, numLab.frame.size.height+10)];
+    numLabShadowView.backgroundColor = [UIColor colorWithWhite:0 alpha:0.6];
+    numLabShadowView.layer.cornerRadius = numLabShadowView.frame.size.height/2.0f;
+    numLabShadowView.clipsToBounds = YES;
+    [self addSubview:numLabShadowView];
+    
+    CGPoint center = numLabShadowView.center;
+    center.y = numLab.center.y;
+    numLabShadowView.center = center;
+    
+    [self bringSubviewToFront:numLab];
 }
 
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context
@@ -128,21 +138,22 @@
     }
 }
 
--(void)initNumLabShadowView
+#pragma mark - 保存
+
+-(UIButton*)saveBtn
 {
-    CGFloat width = [numLab.text boundingRectWithSize:CGSizeMake(MAXFLOAT, numLab.frame.size.height) options: NSStringDrawingUsesFontLeading | NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:numLab.font} context:nil].size.width + 30;
-    
-    numLabShadowView = [[UIView alloc]initWithFrame:CGRectMake((self.frame.size.width - width)/2.0f, 0, width, numLab.frame.size.height+10)];
-    numLabShadowView.backgroundColor = [UIColor colorWithWhite:0 alpha:0.6];
-    numLabShadowView.layer.cornerRadius = numLabShadowView.frame.size.height/2.0f;
-    numLabShadowView.clipsToBounds = YES;
-    [self addSubview:numLabShadowView];
-    
-    CGPoint center = numLabShadowView.center;
-    center.y = numLab.center.y;
-    numLabShadowView.center = center;
-    
-    [self bringSubviewToFront:numLab];
+    if (!_saveBtn) {
+        _saveBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        _saveBtn.frame = CGRectMake(self.frame.size.width - 100, self.frame.size.height - 60, 80, 40);
+        [_saveBtn setTitle:@"保存" forState:UIControlStateNormal];
+        _saveBtn.titleLabel.font = [UIFont systemFontOfSize:15];
+        _saveBtn.backgroundColor = [UIColor colorWithRed:0.1f green:0.1f blue:0.1f alpha:0.60f];
+        _saveBtn.layer.cornerRadius = 5;
+        _saveBtn.clipsToBounds = YES;
+        [_saveBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [_saveBtn addTarget:self action:@selector(saveBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _saveBtn;
 }
 
 -(void)saveBtnClick:(UIButton*)button
@@ -189,10 +200,10 @@
     self.frame = window.bounds;
     [window addSubview:self];
     
+    [self initSubView];
+    
     [UIApplication sharedApplication].statusBarHidden = YES;
     [self showFirstImageViewInView:view];
-    
-    [self initSubView];
 }
 
 -(void)showFirstImageViewInView:(UIView*)view
@@ -201,6 +212,9 @@
     
     UIImageView * imageView = [[UIImageView alloc]initWithFrame:parentRect];
     [self addSubview:imageView];
+    [self bringSubviewToFront:numLabShadowView];
+    [self bringSubviewToFront:numLab];
+    [self bringSubviewToFront:_saveBtn];
     
     if (!_localImageArr) {
         
@@ -252,7 +266,7 @@
         _photoCollectionView.hidden = NO;
         
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            imageView.hidden = YES;
+            imageView.alpha = YES;
             [imageView removeFromSuperview];
         });
     }];
@@ -261,14 +275,14 @@
 -(CGRect)imageView:(UIImageView*)imageView editImageViewSizeWithWidth:(CGFloat)width
 {
     CGRect rect = imageView.frame;
-    if (imageView.image.size.width>width) {
+//    if (imageView.image.size.width>width) {
         rect.size.width = width;
         CGFloat scale = imageView.image.size.width/width;
         rect.size.height = imageView.image.size.height/scale;
-    }else{
-        rect.size.width = imageView.image.size.width;
-        rect.size.height = imageView.image.size.height;
-    }
+//    }else{
+//        rect.size.width = imageView.image.size.width;
+//        rect.size.height = imageView.image.size.height;
+//    }
     return rect;
 }
 
@@ -295,6 +309,7 @@
                 self.originalImageArr = originalImageArr.copy;
                 [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
                 
+                cell.imageScrollView.maximumZoomScale = 2;
             }
         }];
     }
@@ -348,6 +363,9 @@
         id obj = self.originalImageArr[indexPath.item];
         if ([obj isKindOfClass:[UIImage class]]) {
             [self editImageView:cell.showImageView image:obj scrollView:cell.imageScrollView];
+            
+            cell.imageScrollView.maximumZoomScale = 2;
+            
         }else{
             [self imageIsDiskUrl:obj complete:^(BOOL flag) {
                 if (flag) {
@@ -356,6 +374,8 @@
                     [originalImageArr replaceObjectAtIndex:indexPath.item withObject:originalImage];
                     self.originalImageArr = originalImageArr.copy;
                     [self editImageView:cell.showImageView image:originalImage scrollView:cell.imageScrollView];
+                    
+                    cell.imageScrollView.maximumZoomScale = 2;
                 }else{
                     
                     id obj = self.thumbImageArr[indexPath.item];
@@ -407,8 +427,8 @@
     
     CGRect showImageViewFrame = showImageView.frame;
     
-    if (showImageViewFrame.size.width > imageScrollView.frame.size.width) {
-        
+//    if (showImageViewFrame.size.width > imageScrollView.frame.size.width) {
+    
         showImageViewFrame.size.width = imageScrollView.frame.size.width;
         CGFloat scale = image.size.width/showImageViewFrame.size.width;
         showImageViewFrame.size.height = image.size.height/scale;
@@ -416,13 +436,13 @@
         showImageViewFrame.origin.y = (imageScrollView.frame.size.height-showImageViewFrame.size.height)/2.0f;
         
         imageScrollView.maximumZoomScale = scale;
-    }else{
-        
-        showImageViewFrame.origin.x = (imageScrollView.frame.size.width - image.size.width)/2.0f;
-        showImageViewFrame.origin.y = (imageScrollView.frame.size.height - image.size.height)/2.0f;
-        
-        imageScrollView.maximumZoomScale=2.0;
-    }
+//    }else{
+//        
+//        showImageViewFrame.origin.x = (imageScrollView.frame.size.width - image.size.width)/2.0f;
+//        showImageViewFrame.origin.y = (imageScrollView.frame.size.height - image.size.height)/2.0f;
+//        
+//        imageScrollView.maximumZoomScale=2.0;
+//    }
     
     showImageView.frame = showImageViewFrame;
 }

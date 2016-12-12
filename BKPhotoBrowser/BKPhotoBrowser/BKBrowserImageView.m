@@ -26,9 +26,10 @@
         _imageScrollView = [[UIScrollView alloc]initWithFrame:CGRectMake(BKPhotoBrowser_ImageViewMargin, 0, frame.size.width-BKPhotoBrowser_ImageViewMargin*2, frame.size.height)];
         _imageScrollView.showsHorizontalScrollIndicator = NO;
         _imageScrollView.showsVerticalScrollIndicator = NO;
-        _imageScrollView.delegate=self;
+        _imageScrollView.delegate = self;
         _imageScrollView.contentSize = CGSizeMake(frame.size.width-BKPhotoBrowser_ImageViewMargin*2, frame.size.height);
-        _imageScrollView.minimumZoomScale=1.0;
+        _imageScrollView.minimumZoomScale = 1.0;
+        _imageScrollView.maximumZoomScale = 2.0;
         [self addSubview:_imageScrollView];
         
         _showImageView = [[UIImageView alloc]init];

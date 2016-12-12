@@ -65,8 +65,6 @@
 
 -(void)initSubView
 {
-    [self addSubview:self.photoCollectionView];
-    
     if (_localImageArr) {
         if ([_localImageArr count] != 1) {
             numLab = [[UILabel alloc]initWithFrame:CGRectMake(0, 30, self.frame.size.width, 20)];
@@ -200,10 +198,12 @@
     self.frame = window.bounds;
     [window addSubview:self];
     
-    [self initSubView];
+    [self addSubview:[self photoCollectionView]];
     
     [UIApplication sharedApplication].statusBarHidden = YES;
     [self showFirstImageViewInView:view];
+    
+    [self initSubView];
 }
 
 -(void)showFirstImageViewInView:(UIView*)view
@@ -212,17 +212,21 @@
     
     UIImageView * imageView = [[UIImageView alloc]initWithFrame:parentRect];
     [self addSubview:imageView];
-    [self bringSubviewToFront:numLabShadowView];
-    [self bringSubviewToFront:numLab];
-    [self bringSubviewToFront:_saveBtn];
+
     
     if (!_localImageArr) {
         
         [self imageIsDiskUrl:_originalImageArr[_selectNum] complete:^(BOOL flag) {
             if (flag) {
                 imageView.image = [self takeImageInDiskWithUrl:_originalImageArr[_selectNum]];
+                NSMutableArray * originalImageArr = [self.originalImageArr mutableCopy];
+                [originalImageArr replaceObjectAtIndex:_selectNum withObject:imageView.image];
+                self.originalImageArr = originalImageArr.copy;
             }else{
                 imageView.image = [self getSelectImageWithView:view];
+                NSMutableArray * thumbImageArr = [self.thumbImageArr mutableCopy];
+                [thumbImageArr replaceObjectAtIndex:_selectNum withObject:imageView.image];
+                self.thumbImageArr = thumbImageArr.copy;
             }
             [self moveAnimateWithImageView:imageView];
         }];

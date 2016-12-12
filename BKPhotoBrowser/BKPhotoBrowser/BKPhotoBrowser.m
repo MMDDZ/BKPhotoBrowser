@@ -7,7 +7,6 @@
 //
 
 #define Photo_CollectionView_Identifier @"photo_cell"
-#define reduce 0.3
 
 #import "BKPhotoBrowser.h"
 #import "BKBrowserImageView.h"
@@ -42,25 +41,6 @@
 -(UIImage*)takeImageInDiskWithUrl:(NSString*)url
 {
     return [[[SDWebImageManager sharedManager] imageCache] imageFromDiskCacheForKey:url];
-}
-
--(void)setThumbImageArr:(NSArray *)thumbImageArr
-{
-    _thumbImageArr = thumbImageArr;
-    
-}
-
--(void)setOriginalImageArr:(NSArray *)originalImageArr
-{
-//    __block NSMutableArray * array = [NSMutableArray arrayWithArray:originalImageArr];
-//    [originalImageArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-//        [self imageIsDiskUrl:obj complete:^(BOOL flag) {
-//            if (flag) {
-//                [array replaceObjectAtIndex:idx withObject:[self takeImageInDiskWithUrl:obj]];
-//            }
-//        }];
-//    }];
-    _originalImageArr = originalImageArr;
 }
 
 -(void)dealloc
@@ -136,13 +116,11 @@
             numLabShadowViewRect.origin.x = (self.frame.size.width - width)/2.0f;
             numLabShadowView.frame = numLabShadowViewRect;
             
-//            NSInteger num = [[change[@"new"] componentsSeparatedByString:@"/"][0] integerValue]-1;
+            NSInteger num = [[change[@"new"] componentsSeparatedByString:@"/"][0] integerValue]-1;
             
-//            [self imageIsDiskUrl:_originalImageArr[num] complete:^(BOOL flag) {
-//                if (!flag) {
-//                    [self getNetworkOriginalImage];
-//                }
-//            }];
+            if (![self.originalImageArr[num] isKindOfClass:[UIImage class]]) {
+                [self getNetworkOriginalImageWithItem:num];
+            }
         }
     }
 }
@@ -294,32 +272,29 @@
 /**
  *  获取原图
  */
--(void)getNetworkOriginalImage
+-(void)getNetworkOriginalImageWithItem:(NSInteger)item
 {
-    NSMutableString * string = [NSMutableString stringWithString:numLab?numLab.text:@"1/1"];
-    NSInteger item = [[[string componentsSeparatedByString:@"/"] firstObject] integerValue]-1;
-    
     BKBrowserImageView * cell = (BKBrowserImageView*)[_photoCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForItem:item inSection:0]];
     
-    if (cell.imageScrollView.zoomScale == reduce) {
-        if (cell) {
-            BKBrowserIndicator * indicator = [[BKBrowserIndicator alloc]initWithFrame:cell.frame];
-            [_photoCollectionView addSubview:indicator];
-            [indicator startAnimation];
+    if (cell) {
+        BKBrowserIndicator * indicator = [[BKBrowserIndicator alloc]initWithFrame:cell.frame];
+        [cell addSubview:indicator];
+        [indicator startAnimation];
+        
+        [cell.showImageView sd_setImageWithURL:[NSURL URLWithString:_originalImageArr[item]] placeholderImage:cell.showImageView.image completed:^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
+            [indicator stopAnimation];
             
-            [cell.showImageView sd_setImageWithURL:[NSURL URLWithString:_originalImageArr[item]] placeholderImage:cell.showImageView.image completed:^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
-                [indicator stopAnimation];
+            if (!error) {
                 
-                if (!error) {
-                    
-                    cell.showImageView.transform = CGAffineTransformMakeScale(1, 1);
-                    cell.showImageView.userInteractionEnabled = YES;
-                    
-                    [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
-                    
-                }
-            }];
-        }
+                cell.showImageView.transform = CGAffineTransformMakeScale(1, 1);
+                
+                NSMutableArray * originalImageArr = [self.originalImageArr mutableCopy];
+                [originalImageArr replaceObjectAtIndex:item withObject:image];
+                self.originalImageArr = originalImageArr.copy;
+                [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
+                
+            }
+        }];
     }
 }
 
@@ -361,7 +336,6 @@
     cell.imageScrollView.contentSize = CGSizeMake(cell.frame.size.width-BKPhotoBrowser_ImageViewMargin*2, cell.frame.size.height);
     
     cell.showImageView.transform = CGAffineTransformMakeScale(1, 1);
-    cell.showImageView.userInteractionEnabled = YES;
     
     if (_localImageArr) {
         
@@ -382,12 +356,9 @@
                     [self editImageView:cell.showImageView image:originalImage scrollView:cell.imageScrollView];
                 }else{
                     
-                    cell.showImageView.userInteractionEnabled = NO;
-                    
                     id obj = self.thumbImageArr[indexPath.item];
                     if ([obj isKindOfClass:[UIImage class]]) {
                         [self editImageView:cell.showImageView image:obj scrollView:cell.imageScrollView];
-                        [self getNetworkOriginalImage];
                     }else{
                         [self imageIsDiskUrl:obj complete:^(BOOL flag) {
                             if (flag) {
@@ -396,7 +367,6 @@
                                 [thumbImageArr replaceObjectAtIndex:indexPath.item withObject:thumbImage];
                                 self.thumbImageArr = thumbImageArr.copy;
                                 [self editImageView:cell.showImageView image:thumbImage scrollView:cell.imageScrollView];
-                                [self getNetworkOriginalImage];
                             }else{
                                 [cell.showImageView sd_setImageWithURL:[NSURL URLWithString:_thumbImageArr[indexPath.row]] completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
                                     
@@ -405,8 +375,6 @@
                                     self.thumbImageArr = thumbImageArr.copy;
                                     
                                     [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
-                                    
-                                    [self getNetworkOriginalImage];
                                 }];
                             }
                         }];

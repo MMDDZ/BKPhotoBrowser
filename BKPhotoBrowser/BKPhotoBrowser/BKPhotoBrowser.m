@@ -223,6 +223,10 @@
     NSInteger item = [[[string componentsSeparatedByString:@"/"] firstObject] integerValue]-1;
     BKBrowserImageView * cell = (BKBrowserImageView*)[_photoCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForItem:item inSection:0]];
     
+    if (!cell.showImageView.image) {
+        return;
+    }
+    
     UIImageWriteToSavedPhotosAlbum(cell.showImageView.image, self, @selector(image:didFinishSavingWithError:contextInfo:), NULL);
     
     saveIndicator = [[BKBrowserIndicator alloc] initWithFrame:self.bounds];

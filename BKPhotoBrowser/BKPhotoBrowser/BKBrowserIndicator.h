@@ -10,6 +10,8 @@
 
 @interface BKBrowserIndicator : UIView
 
+@property (nonatomic,copy) NSString * progressTitle;
+
 -(void)startAnimation;
 
 -(void)stopAnimation;

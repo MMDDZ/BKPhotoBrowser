@@ -11,6 +11,7 @@
 @interface BKBrowserIndicator()
 
 @property (nonatomic,strong) CALayer * dotLayer;
+@property (nonatomic,strong) UILabel * progressLab;
 
 @end
 
@@ -24,6 +25,7 @@
         self.backgroundColor = [UIColor clearColor];
         
         [self dotLayer];
+        [self addSubview:[self progressLab]];
     }
     return self;
 }
@@ -75,6 +77,26 @@
 -(void)stopAnimation
 {
     [self removeFromSuperview];
+}
+
+-(void)setProgressTitle:(NSString *)progressTitle
+{
+    _progressTitle = progressTitle;
+    if (_progressLab) {
+        _progressLab.text = _progressTitle;
+    }
+}
+
+-(UILabel*)progressLab
+{
+    if (!_progressLab) {
+        _progressLab = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, self.frame.size.width, self.frame.size.height)];
+        _progressLab.textColor = [UIColor whiteColor];
+        _progressLab.textAlignment = NSTextAlignmentCenter;
+        _progressLab.text = @"0";
+        _progressLab.font = [UIFont systemFontOfSize:8*(self.frame.size.width/414.0f)];
+    }
+    return _progressLab;
 }
 
 @end

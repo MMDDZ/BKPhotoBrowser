@@ -31,6 +31,8 @@
 
 @implementation BKPhotoBrowser
 
+#pragma mark - SDWebImage
+
 -(void)imageIsDiskUrl:(NSString*)url complete:(void (^)(BOOL flag))complete
 {
     [[SDWebImageManager sharedManager] diskImageExistsForURL:[NSURL URLWithString:url] completion:^(BOOL isInCache) {
@@ -44,6 +46,66 @@
 {
     return [[[SDWebImageManager sharedManager] imageCache] imageFromDiskCacheForKey:url];
 }
+
+-(void)storeImageWithImage:(UIImage*)image url:(NSString*)url
+{
+    [[SDImageCache sharedImageCache] storeImage:image forKey:url completion:^{
+        
+    }];
+}
+
+-(void)downloadImageWithUrl:(NSString*)url progress:(void (^)(NSString*percentage))progress completed:(void (^)(NSString *url,UIImage *image))completed
+{
+    if ([url isKindOfClass:[NSString class]]) {
+        [self imageIsDiskUrl:url complete:^(BOOL flag) {
+            if (flag) {
+                UIImage * image = [self takeImageInDiskWithUrl:url];
+                if (completed) {
+                    completed(url,image);
+                }
+            }else{
+                [[[SDWebImageManager sharedManager] imageDownloader] downloadImageWithURL:[NSURL URLWithString:url] options:SDWebImageDownloaderLowPriority progress:^(NSInteger receivedSize, NSInteger expectedSize, NSURL * _Nullable targetURL) {
+                    
+                    CGFloat imageDownLoadProgress = [[NSString stringWithFormat:@"%ld",(long)receivedSize] floatValue]/expectedSize;
+                    if (progress) {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            progress([NSString stringWithFormat:@"%.0f",fabs(imageDownLoadProgress) * 100]);
+                        });
+                    }
+                    
+                } completed:^(UIImage *image, NSData *data, NSError *error, BOOL finished) {
+                    
+                    if (finished) {
+                        if (error) {
+                            //                        if (completed) {
+                            //                            dispatch_async(dispatch_get_main_queue(), ^{
+                            //                                completed(url,nil);
+                            //                            });
+                            //                        }
+                        }else{
+                            
+                            
+                            [self storeImageWithImage:image url:url];
+                            
+                            if (completed) {
+                                dispatch_async(dispatch_get_main_queue(), ^{
+                                    completed(url,image);
+                                });
+                            }
+                            
+                        }
+                    }
+                }];
+            }
+        }];
+    }else{
+        if (completed) {
+            completed(nil,nil);
+        }
+    }
+}
+
+#pragma mark - 初始
 
 -(void)dealloc
 {
@@ -71,7 +133,7 @@
             numLab.font = [UIFont systemFontOfSize:18];
             numLab.textAlignment = NSTextAlignmentCenter;
             numLab.textColor = [UIColor whiteColor];
-            numLab.text = [NSString stringWithFormat:@"%ld/%ld",_selectNum+1,[_localImageArr count]];
+            numLab.text = [NSString stringWithFormat:@"%ld/%ld",(long)_selectNum+1,(unsigned long)[_localImageArr count]];
             [self addSubview:numLab];
             
             [self initNumLabShadowView];
@@ -82,7 +144,7 @@
             numLab.font = [UIFont systemFontOfSize:18];
             numLab.textAlignment = NSTextAlignmentCenter;
             numLab.textColor = [UIColor whiteColor];
-            numLab.text = [NSString stringWithFormat:@"%ld/%ld",_selectNum+1,[_thumbImageArr count]];
+            numLab.text = [NSString stringWithFormat:@"%ld/%ld",(long)_selectNum+1,(unsigned long)[_thumbImageArr count]];
             [self addSubview:numLab];
             
             [self initNumLabShadowView];
@@ -222,18 +284,19 @@
                 NSMutableArray * originalImageArr = [self.originalImageArr mutableCopy];
                 [originalImageArr replaceObjectAtIndex:_selectNum withObject:imageView.image];
                 self.originalImageArr = originalImageArr.copy;
+                [self moveAnimateWithImageView:imageView isOriginal:YES];
             }else{
                 imageView.image = [self getSelectImageWithView:view];
                 NSMutableArray * thumbImageArr = [self.thumbImageArr mutableCopy];
                 [thumbImageArr replaceObjectAtIndex:_selectNum withObject:imageView.image];
                 self.thumbImageArr = thumbImageArr.copy;
+                [self moveAnimateWithImageView:imageView isOriginal:NO];
             }
-            [self moveAnimateWithImageView:imageView];
         }];
 
     }else{
         imageView.image = [self getSelectImageWithView:view];
-        [self moveAnimateWithImageView:imageView];
+        [self moveAnimateWithImageView:imageView isOriginal:YES];
     }
 }
 
@@ -254,7 +317,7 @@
     return image;
 }
 
--(void)moveAnimateWithImageView:(UIImageView*)imageView
+-(void)moveAnimateWithImageView:(UIImageView*)imageView isOriginal:(BOOL)isOriginal
 {
     [UIView animateWithDuration:0.35 animations:^{
         
@@ -267,11 +330,13 @@
         
         [_photoCollectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:_selectNum inSection:0] atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];
         
-        _photoCollectionView.hidden = NO;
-        
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            imageView.alpha = YES;
+            _photoCollectionView.hidden = NO;
+            imageView.hidden = YES;
             [imageView removeFromSuperview];
+            if (!isOriginal) {
+                [self getNetworkOriginalImageWithItem:_selectNum];
+            }
         });
     }];
 }
@@ -298,33 +363,7 @@
     cell.imageScrollView.zoomScale = 1;
     
     if (cell) {
-        
-        if (!cell.showImageView.image) {
-            id obj = self.thumbImageArr[item];
-            if ([obj isKindOfClass:[UIImage class]]) {
-                [self editImageView:cell.showImageView image:obj scrollView:cell.imageScrollView];
-            }else{
-                [self imageIsDiskUrl:obj complete:^(BOOL flag) {
-                    if (flag) {
-                        UIImage * thumbImage = [self takeImageInDiskWithUrl:_thumbImageArr[item]];
-                        NSMutableArray * thumbImageArr = [self.thumbImageArr mutableCopy];
-                        [thumbImageArr replaceObjectAtIndex:item withObject:thumbImage];
-                        self.thumbImageArr = thumbImageArr.copy;
-                        [self editImageView:cell.showImageView image:thumbImage scrollView:cell.imageScrollView];
-                    }else{
-                        [cell.showImageView sd_setImageWithURL:[NSURL URLWithString:_thumbImageArr[item]] completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
-                            
-                            NSMutableArray * thumbImageArr = [self.thumbImageArr mutableCopy];
-                            [thumbImageArr replaceObjectAtIndex:item withObject:image];
-                            self.thumbImageArr = thumbImageArr.copy;
-                            
-                            [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
-                        }];
-                    }
-                }];
-            }
-        }
-        
+    
         BKBrowserIndicator * oldIndicator = [cell viewWithTag:1];
         [oldIndicator removeFromSuperview];
         
@@ -333,17 +372,33 @@
         [cell addSubview:indicator];
         [indicator startAnimation];
         
-        [cell.showImageView sd_setImageWithURL:[NSURL URLWithString:_originalImageArr[item]] placeholderImage:cell.showImageView.image completed:^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
+        UITapGestureRecognizer * deleteRecognizer = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(imageScrollViewRecognizer:)];
+        deleteRecognizer.numberOfTapsRequired = 1;
+        [indicator addGestureRecognizer:deleteRecognizer];
+        
+        [self downloadImageWithUrl:_originalImageArr[item] progress:^(NSString *percentage) {
+            
+            indicator.progressTitle = percentage;
+            
+        } completed:^(NSString *url, UIImage *image) {
             
             [indicator stopAnimation];
             
-            if (!error) {
+            if (!url || !image) {
                 
-                NSMutableArray * originalImageArr = [self.originalImageArr mutableCopy];
-                [originalImageArr replaceObjectAtIndex:item withObject:image];
-                self.originalImageArr = originalImageArr.copy;
-                [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
-    
+            }else{
+                if ([_originalImageArr containsObject:url]) {
+                    NSInteger index = [_originalImageArr indexOfObject:url];
+                    
+                    NSMutableArray * originalImageArr = [self.originalImageArr mutableCopy];
+                    [originalImageArr replaceObjectAtIndex:index withObject:image];
+                    self.originalImageArr = originalImageArr.copy;
+                    
+                    BKBrowserImageView * cell = (BKBrowserImageView*)[_photoCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForItem:index inSection:0]];
+                    if (cell) {
+                        [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
+                    }
+                }
             }
         }];
     }
@@ -385,8 +440,9 @@
     BKBrowserImageView * cell = (BKBrowserImageView*)[collectionView dequeueReusableCellWithReuseIdentifier:Photo_CollectionView_Identifier forIndexPath:indexPath];
     
     cell.imageScrollView.contentSize = CGSizeMake(cell.frame.size.width-BKPhotoBrowser_ImageViewMargin*2, cell.frame.size.height);
-    
     cell.imageScrollView.zoomScale = 1;
+    
+    cell.showImageView.image = nil;
     
     if (_localImageArr) {
         UIImage * image = _thumbImageArr[indexPath.item];
@@ -417,13 +473,27 @@
                                 self.thumbImageArr = thumbImageArr.copy;
                                 [self editImageView:cell.showImageView image:thumbImage scrollView:cell.imageScrollView];
                             }else{
-                                [cell.showImageView sd_setImageWithURL:[NSURL URLWithString:_thumbImageArr[indexPath.item]] completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
+                                
+                                [self downloadImageWithUrl:_thumbImageArr[indexPath.item] progress:^(NSString *percentage) {
                                     
-                                    NSMutableArray * thumbImageArr = [self.thumbImageArr mutableCopy];
-                                    [thumbImageArr replaceObjectAtIndex:indexPath.item withObject:image];
-                                    self.thumbImageArr = thumbImageArr.copy;
+                                } completed:^(NSString *url, UIImage *image) {
                                     
-                                    [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
+                                    if (!url || !image) {
+                                        
+                                    }else{
+                                        if ([_thumbImageArr containsObject:url]) {
+                                            NSInteger index = [_thumbImageArr indexOfObject:url];
+                                            
+                                            NSMutableArray * thumbImageArr = [self.thumbImageArr mutableCopy];
+                                            [thumbImageArr replaceObjectAtIndex:index withObject:image];
+                                            self.thumbImageArr = thumbImageArr.copy;
+                                            
+                                            BKBrowserImageView * cell = (BKBrowserImageView*)[_photoCollectionView cellForItemAtIndexPath:[NSIndexPath indexPathForItem:index inSection:0]];
+                                            if (cell) {
+                                                [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
+                                            }
+                                        }
+                                    }
                                 }];
                             }
                         }];
@@ -507,12 +577,12 @@
         if (_localImageArr) {
             if ([_localImageArr count] != 1) {
                 
-                numLab.text = [NSString stringWithFormat:@"%ld/%ld",item+1,[_localImageArr count]];
+                numLab.text = [NSString stringWithFormat:@"%ld/%ld",(long)item+1,(unsigned long)[_localImageArr count]];
             }
         }else{
             if ([_thumbImageArr count] != 1) {
                 
-                numLab.text = [NSString stringWithFormat:@"%ld/%ld",item+1,[_thumbImageArr count]];
+                numLab.text = [NSString stringWithFormat:@"%ld/%ld",(long)item+1,(unsigned long)[_thumbImageArr count]];
             }
         }
     }

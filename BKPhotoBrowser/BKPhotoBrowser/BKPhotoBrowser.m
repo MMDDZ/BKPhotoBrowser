@@ -519,28 +519,17 @@
 -(void)editImageView:(UIImageView*)showImageView image:(UIImage*)image scrollView:(UIScrollView*)imageScrollView
 {
     showImageView.image = image;
-    showImageView.frame = CGRectMake(0, 0, image.size.width, image.size.height);
     
     CGRect showImageViewFrame = showImageView.frame;
     
-//    if (showImageViewFrame.size.width > imageScrollView.frame.size.width) {
-    
-        showImageViewFrame.size.width = imageScrollView.frame.size.width;
-        CGFloat scale = image.size.width/showImageViewFrame.size.width;
-        showImageViewFrame.size.height = image.size.height/scale;
-        showImageViewFrame.origin.x = 0;
-        showImageViewFrame.origin.y = (imageScrollView.frame.size.height-showImageViewFrame.size.height)/2.0f;
-        
-//        imageScrollView.maximumZoomScale = scale;
-//    }else{
-//        
-//        showImageViewFrame.origin.x = (imageScrollView.frame.size.width - image.size.width)/2.0f;
-//        showImageViewFrame.origin.y = (imageScrollView.frame.size.height - image.size.height)/2.0f;
-//        
-//        imageScrollView.maximumZoomScale=2.0;
-//    }
-    
+    showImageViewFrame.size.width = imageScrollView.frame.size.width;
+    CGFloat scale = image.size.width / showImageViewFrame.size.width;
+    showImageViewFrame.size.height = image.size.height / scale;
+    showImageViewFrame.origin.x = 0;
+    showImageViewFrame.origin.y = (imageScrollView.frame.size.height-showImageViewFrame.size.height)/2.0f<0?0:(imageScrollView.frame.size.height-showImageViewFrame.size.height)/2.0f;
     showImageView.frame = showImageViewFrame;
+    
+    imageScrollView.contentSize = CGSizeMake(image.size.width / scale, image.size.height / scale);
 }
 
 -(void)imageScrollViewRecognizer:(UITapGestureRecognizer*)recoginzer

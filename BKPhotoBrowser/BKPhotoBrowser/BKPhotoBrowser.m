@@ -44,6 +44,9 @@
 
 -(UIImage*)takeImageInDiskWithUrl:(NSString*)url
 {
+    if ([url isKindOfClass:[UIImage class]]) {
+        return (UIImage*)url;
+    }
     return [[[SDWebImageManager sharedManager] imageCache] imageFromDiskCacheForKey:url];
 }
 
@@ -77,13 +80,12 @@
                     
                     if (finished) {
                         if (error) {
-                            //                        if (completed) {
-                            //                            dispatch_async(dispatch_get_main_queue(), ^{
-                            //                                completed(url,nil);
-                            //                            });
-                            //                        }
+                            if (completed) {
+                                dispatch_async(dispatch_get_main_queue(), ^{
+                                    completed(url,nil);
+                                });
+                            }
                         }else{
-                            
                             
                             [self storeImageWithImage:image url:url];
                             
@@ -92,7 +94,6 @@
                                     completed(url,image);
                                 });
                             }
-                            
                         }
                     }
                 }];
@@ -225,6 +226,7 @@
     UIImageWriteToSavedPhotosAlbum(cell.showImageView.image, self, @selector(image:didFinishSavingWithError:contextInfo:), NULL);
     
     saveIndicator = [[BKBrowserIndicator alloc] initWithFrame:self.bounds];
+    saveIndicator.progressTitle = @"";
     [[UIApplication sharedApplication].keyWindow addSubview:saveIndicator];
     [saveIndicator startAnimation];
 }
@@ -235,7 +237,7 @@
     
     UILabel *label = [[UILabel alloc] init];
     label.textColor = [UIColor whiteColor];
-    label.backgroundColor = [UIColor colorWithRed:0.1f green:0.1f blue:0.1f alpha:0.90f];
+    label.backgroundColor = [UIColor colorWithRed:0.1f green:0.1f blue:0.1f alpha:0.60f];
     label.layer.cornerRadius = 5;
     label.clipsToBounds = YES;
     label.bounds = CGRectMake(0, 0, 100, 30);

@@ -323,8 +323,15 @@
         
         CGRect showImageViewFrame = imageView.frame;
         showImageViewFrame = [self imageView:imageView editImageViewSizeWithWidth:self.frame.size.width];
-        imageView.frame = showImageViewFrame;
-        imageView.center = self.center;
+        
+        if (showImageViewFrame.size.height <= self.frame.size.height) {
+            imageView.frame = showImageViewFrame;
+            imageView.center = self.center;
+        }else{
+            showImageViewFrame.origin.x = 0;
+            showImageViewFrame.origin.y = 0;
+            imageView.frame = showImageViewFrame;
+        }
         
     } completion:^(BOOL finished) {
         
@@ -344,14 +351,11 @@
 -(CGRect)imageView:(UIImageView*)imageView editImageViewSizeWithWidth:(CGFloat)width
 {
     CGRect rect = imageView.frame;
-//    if (imageView.image.size.width>width) {
-        rect.size.width = width;
-        CGFloat scale = imageView.image.size.width/width;
-        rect.size.height = imageView.image.size.height/scale;
-//    }else{
-//        rect.size.width = imageView.image.size.width;
-//        rect.size.height = imageView.image.size.height;
-//    }
+    
+    rect.size.width = width;
+    CGFloat scale = imageView.image.size.width/width;
+    rect.size.height = imageView.image.size.height/scale;
+    
     return rect;
 }
 

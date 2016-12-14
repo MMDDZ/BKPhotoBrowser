@@ -455,7 +455,7 @@
     cell.showImageView.image = nil;
     
     if (_localImageArr) {
-        UIImage * image = _thumbImageArr[indexPath.item];
+        UIImage * image = _localImageArr[indexPath.item];
         [self editImageView:cell.showImageView image:image scrollView:cell.imageScrollView];
     }else{
         id obj = self.originalImageArr[indexPath.item];

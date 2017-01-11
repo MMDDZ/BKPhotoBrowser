@@ -279,6 +279,8 @@
     CGRect parentRect = [view.superview convertRect:view.frame toView:self];
     
     UIImageView * imageView = [[UIImageView alloc]initWithFrame:parentRect];
+    imageView.contentMode = UIViewContentModeScaleAspectFill;
+    imageView.clipsToBounds = YES;
     [self addSubview:imageView];
 
     

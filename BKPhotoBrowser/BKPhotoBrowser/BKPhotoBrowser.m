@@ -284,21 +284,26 @@
     
     if (!_localImageArr) {
         
-        [self imageIsDiskUrl:_originalImageArr[_selectNum] complete:^(BOOL flag) {
-            if (flag) {
-                imageView.image = [self takeImageInDiskWithUrl:_originalImageArr[_selectNum]];
-                NSMutableArray * originalImageArr = [self.originalImageArr mutableCopy];
-                [originalImageArr replaceObjectAtIndex:_selectNum withObject:imageView.image];
-                self.originalImageArr = originalImageArr.copy;
-                [self moveAnimateWithImageView:imageView isOriginal:YES];
-            }else{
-                imageView.image = [self getSelectImageWithView:view];
-                NSMutableArray * thumbImageArr = [self.thumbImageArr mutableCopy];
-                [thumbImageArr replaceObjectAtIndex:_selectNum withObject:imageView.image];
-                self.thumbImageArr = thumbImageArr.copy;
-                [self moveAnimateWithImageView:imageView isOriginal:NO];
-            }
-        }];
+        if ([_originalImageArr[_selectNum] isKindOfClass:[UIImage class]]) {
+            imageView.image = _originalImageArr[_selectNum];
+            [self moveAnimateWithImageView:imageView isOriginal:YES];
+        }else{
+            [self imageIsDiskUrl:_originalImageArr[_selectNum] complete:^(BOOL flag) {
+                if (flag) {
+                    imageView.image = [self takeImageInDiskWithUrl:_originalImageArr[_selectNum]];
+                    NSMutableArray * originalImageArr = [self.originalImageArr mutableCopy];
+                    [originalImageArr replaceObjectAtIndex:_selectNum withObject:imageView.image];
+                    self.originalImageArr = originalImageArr.copy;
+                    [self moveAnimateWithImageView:imageView isOriginal:YES];
+                }else{
+                    imageView.image = [self getSelectImageWithView:view];
+                    NSMutableArray * thumbImageArr = [self.thumbImageArr mutableCopy];
+                    [thumbImageArr replaceObjectAtIndex:_selectNum withObject:imageView.image];
+                    self.thumbImageArr = thumbImageArr.copy;
+                    [self moveAnimateWithImageView:imageView isOriginal:NO];
+                }
+            }];
+        }
 
     }else{
         imageView.image = [self getSelectImageWithView:view];
@@ -427,6 +432,7 @@
         _photoCollectionView.dataSource = self;
         _photoCollectionView.backgroundColor = [UIColor clearColor];
         _photoCollectionView.showsVerticalScrollIndicator = NO;
+        _photoCollectionView.showsHorizontalScrollIndicator = NO;
         _photoCollectionView.hidden = YES;
         _photoCollectionView.pagingEnabled = YES;
         

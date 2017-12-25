@@ -1,15 +1,15 @@
 //
-//  BKPhotoCollectionViewFlowLayout.m
+//  BKPhotoBrowserCollectionViewFlowLayout.m
 //  BKPhotoBrowser
 //
 //  Created by 毕珂 on 16/7/24.
 //  Copyright © 2016年 BIKE. All rights reserved.
 //
 
-#import "BKPhotoCollectionViewFlowLayout.h"
+#import "BKPhotoBrowserCollectionViewFlowLayout.h"
 #import "BKPhotoBrowserConfig.h"
 
-@implementation BKPhotoCollectionViewFlowLayout
+@implementation BKPhotoBrowserCollectionViewFlowLayout
 
 -(void)prepareLayout
 {

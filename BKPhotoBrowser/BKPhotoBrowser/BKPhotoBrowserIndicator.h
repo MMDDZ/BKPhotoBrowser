@@ -1,6 +1,6 @@
 //
-//  BKBrowserIndicator.h
-//  BKPhotoBrowser
+//  BKPhotoBrowserIndicator.h
+//  BKPhotoBrowserIndicator
 //
 //  Created by iMac on 16/9/2.
 //  Copyright © 2016年 BIKE. All rights reserved.
@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface BKBrowserIndicator : UIView
+@interface BKPhotoBrowserIndicator : UIView
 
 @property (nonatomic,copy) NSString * progressTitle;
 

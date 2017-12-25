@@ -7,30 +7,62 @@
 //
 
 #import <UIKit/UIKit.h>
+@class BKPhotoBrowser;
 
-@interface BKPhotoBrowser : UIView
+@protocol BKPhotoBrowserDelegate <NSObject>
 
-/**
- *  本地数组
- */
-@property (nonatomic,strong) NSArray * localImageArr;
+@required
 
 /**
- *  网络数组
+ 返回当前选中索引的imageView
+
+ @param photoBrowser 图片浏览器
+ @param index 当前索引
+ @return 当前选中索引的imageView
  */
-@property (nonatomic,strong) NSArray * thumbImageArr;
-@property (nonatomic,strong) NSArray * originalImageArr;
+-(UIImageView*)photoBrowser:(BKPhotoBrowser*)photoBrowser currentImageViewForIndex:(NSInteger)index;
 
 /**
- *  选择的第几个
+ 返回当前图片的高清图或者高清图的网络地址
+
+ @param photoBrowser 图片浏览器
+ @param index 当前索引
+ @return 当前图片的高清图或者高清图的网络地址
  */
-@property (nonatomic,assign) NSInteger selectNum;
+-(id)photoBrowser:(BKPhotoBrowser *)photoBrowser dataSourceForIndex:(NSInteger)index;
+
+@optional
 
 /**
- *  显示
- *
- *  @param view 点击的view(button或imageView)
+ 二维码扫描内容
+
+ @param photoBrowser 图片浏览器
+ @param qrCodeContent 二维码内容
  */
--(void)showInView:(UIView*)view;
+-(void)photoBrowser:(BKPhotoBrowser *)photoBrowser qrCodeContent:(NSString*)qrCodeContent;
+
+@end
+
+@interface BKPhotoBrowser : UIViewController<UINavigationControllerDelegate>
+
+/**
+ 代理
+ */
+@property (nonatomic,assign) id<BKPhotoBrowserDelegate> delegate;
+
+/**
+ 图片总数
+ */
+@property (nonatomic,assign) NSInteger allImageCount;
+
+/**
+ 目前选择的index
+ */
+@property (nonatomic,assign) NSInteger currentIndex;
+
+/**
+ 显示方法
+ */
+-(void)showInVC:(UIViewController*)vc;
 
 @end

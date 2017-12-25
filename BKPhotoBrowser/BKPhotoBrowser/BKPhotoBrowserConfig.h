@@ -12,4 +12,10 @@
 //两个照片之间的距离
 #define BKPhotoBrowser_ImageViewMargin 10
 
+#define POINTS_FROM_PIXELS(__PIXELS) (__PIXELS / [[UIScreen mainScreen] scale])
+#define ONE_PIXEL POINTS_FROM_PIXELS(1.0)
+
+#define WEAK_SELF(obj) __weak typeof(obj) weakSelf = obj;
+#define STRONG_SELF(obj) __strong typeof(obj) strongSelf = weakSelf;
+
 #endif /* BKPhotoBrowserConfig_h */

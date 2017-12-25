@@ -1,5 +1,5 @@
 //
-//  BKPhotoCollectionViewFlowLayout.h
+//  BKPhotoBrowserCollectionViewFlowLayout.h
 //  BKPhotoBrowser
 //
 //  Created by 毕珂 on 16/7/24.
@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface BKPhotoCollectionViewFlowLayout : UICollectionViewFlowLayout
+@interface BKPhotoBrowserCollectionViewFlowLayout : UICollectionViewFlowLayout
 
 @property (nonatomic,assign) NSInteger allImageCount;
 

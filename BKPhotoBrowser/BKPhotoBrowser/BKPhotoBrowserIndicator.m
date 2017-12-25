@@ -1,21 +1,21 @@
 //
-//  BKBrowserIndicator.m
-//  BKPhotoBrowser
+//  BKPhotoBrowserIndicator.m
+//  BKPhotoBrowserIndicator
 //
 //  Created by iMac on 16/9/2.
 //  Copyright © 2016年 BIKE. All rights reserved.
 //
 
-#import "BKBrowserIndicator.h"
+#import "BKPhotoBrowserIndicator.h"
 
-@interface BKBrowserIndicator()
+@interface BKPhotoBrowserIndicator()
 
 @property (nonatomic,strong) CALayer * dotLayer;
 @property (nonatomic,strong) UILabel * progressLab;
 
 @end
 
-@implementation BKBrowserIndicator
+@implementation BKPhotoBrowserIndicator
 
 -(instancetype)initWithFrame:(CGRect)frame
 {

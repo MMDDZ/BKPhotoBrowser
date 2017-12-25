@@ -1,20 +1,19 @@
 //
-//  BKBrowserImageView.m
-//  BKPhotoBrowser
+//  BKPhotoBrowserCollectionViewCell.m
+//  guoguanjuyanglao
 //
-//  Created by 毕珂 on 16/7/24.
-//  Copyright © 2016年 BIKE. All rights reserved.
+//  Created by zhaolin on 2017/12/18.
+//  Copyright © 2017年 zhaolin. All rights reserved.
 //
 
-#import "BKBrowserImageView.h"
+#import "BKPhotoBrowserCollectionViewCell.h"
 #import "BKPhotoBrowserConfig.h"
 
-
-@interface BKBrowserImageView()<UIScrollViewDelegate>
+@interface BKPhotoBrowserCollectionViewCell()<UIScrollViewDelegate>
 
 @end
 
-@implementation BKBrowserImageView
+@implementation BKPhotoBrowserCollectionViewCell
 
 -(instancetype)initWithFrame:(CGRect)frame
 {
@@ -32,7 +31,7 @@
         _imageScrollView.maximumZoomScale = 2.0;
         [self addSubview:_imageScrollView];
         
-        _showImageView = [[UIImageView alloc]init];
+        _showImageView = [[FLAnimatedImageView alloc]init];
         _showImageView.userInteractionEnabled = YES;
         [_imageScrollView addSubview:_showImageView];
         

@@ -25,6 +25,10 @@ typedef NS_ENUM(NSUInteger, BKPhotoBrowserTransition) {
  */
 @property (nonatomic,assign) CGRect endRect;
 /**
+ 导航是否隐藏
+ */
+@property (nonatomic,assign) BOOL isNavHidden;
+/**
  转场动画完成回调
  */
 @property (nonatomic,copy) void (^endTransitionAnimateAction)(void);

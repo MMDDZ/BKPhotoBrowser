@@ -33,7 +33,7 @@
         CGFloat x = space+(space+width)*(i%2);
         CGFloat y = space+(space+height)*(i/2);
         
-        button.frame = CGRectMake(x, y, width, height);
+        button.frame = CGRectMake(x, 100 + y, width, height);
         button.tag = (i+1)*100;
         [button addTarget:self action:@selector(buttonClick:) forControlEvents:UIControlEventTouchUpInside];
         [self.view addSubview:button];
@@ -57,7 +57,7 @@
     photoBrowser.delegate = self;
     photoBrowser.allImageCount = [imageArr count];
     photoBrowser.currentIndex = button.tag/100-1;
-    [photoBrowser showInVC:self];
+    [photoBrowser showInNav:self.navigationController];
 }
 
 #pragma mark - BKPhotoBrowserDelegate

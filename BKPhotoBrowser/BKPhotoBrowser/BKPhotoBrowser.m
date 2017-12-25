@@ -25,10 +25,25 @@
     UIView * numLabShadowView;
 }
 
+/**
+ 导航
+ */
+@property (nonatomic,strong) UINavigationController * nav;
+/**
+ 导航是否隐藏
+ */
+@property (nonatomic,assign) BOOL isNavHidden;
+/**
+ 显示view
+ */
 @property (nonatomic,strong) UICollectionView * collectionView;
-
-@property (nonatomic,strong) UIImage * errorImage;//加载失败image
-
+/**
+ 加载失败image
+ */
+@property (nonatomic,strong) UIImage * errorImage;
+/**
+ 交互方法
+ */
 @property (nonatomic,strong) BKPhotoBrowserInteractiveTransition * interactiveTransition;
 
 
@@ -122,11 +137,15 @@
 
 #pragma mark - 显示方法
 
--(void)showInVC:(UIViewController*)vc
+-(void)showInNav:(UINavigationController*)nav
 {
-    self.transitioningDelegate = self;
-    self.modalPresentationStyle = UIModalPresentationCustom;
-    [vc presentViewController:self animated:YES completion:nil];
+    _nav = nav;
+    _isNavHidden = _nav.navigationBarHidden;
+    if (!_isNavHidden) {
+        _nav.navigationBarHidden = YES;
+    }
+    _nav.delegate = self;
+    [_nav pushViewController:self animated:YES];
 }
 
 #pragma mark - ViewDidLoad
@@ -174,50 +193,52 @@
     return _interactiveTransition;
 }
 
-#pragma mark - UIViewControllerTransitioningDelegate
+#pragma mark - UINavigationControllerDelegate
 
-- (id<UIViewControllerAnimatedTransitioning>)animationControllerForPresentedController:(UIViewController *)presented presentingController:(UIViewController *)presenting sourceController:(UIViewController *)source
+- (id<UIViewControllerAnimatedTransitioning>)navigationController:(UINavigationController *)navigationController animationControllerForOperation:(UINavigationControllerOperation)operation fromViewController:(UIViewController *)fromVC toViewController:(UIViewController *)toVC
 {
-    UIImageView * imageView = [self getTapImageView];
-    
-    BKPhotoBrowserTransitionAnimater * transitionAnimater = [[BKPhotoBrowserTransitionAnimater alloc] initWithTransitionType:BKPhotoBrowserTransitionPush];
-    transitionAnimater.startImageView = imageView;
-    transitionAnimater.endRect = [self calculateTargetFrameWithImageView:imageView];
-    WEAK_SELF(self);
-    [transitionAnimater setEndTransitionAnimateAction:^{
-        STRONG_SELF(self);
+    if (operation == UINavigationControllerOperationPush) {
         
-        [strongSelf.collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:strongSelf.currentIndex inSection:0] atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];
+        UIImageView * imageView = [self getTapImageView];
         
-        strongSelf.collectionView.hidden = NO;
-    }];
-    
-    return transitionAnimater;
-}
-
-- (id<UIViewControllerAnimatedTransitioning>)animationControllerForDismissedController:(UIViewController *)dismissed
-{
-    _collectionView.hidden = YES;
-    UIImageView * imageView = [self.delegate photoBrowser:self currentImageViewForIndex:_currentIndex];
-    CGRect endRect = CGRectZero;
-    if (imageView) {
-        endRect = [imageView.superview convertRect:imageView.frame toView:self.view];
+        BKPhotoBrowserTransitionAnimater * transitionAnimater = [[BKPhotoBrowserTransitionAnimater alloc] initWithTransitionType:BKPhotoBrowserTransitionPush];
+        transitionAnimater.startImageView = imageView;
+        transitionAnimater.endRect = [self calculateTargetFrameWithImageView:imageView];
+        WEAK_SELF(self);
+        [transitionAnimater setEndTransitionAnimateAction:^{
+            STRONG_SELF(self);
+            
+            [strongSelf.collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:strongSelf.currentIndex inSection:0] atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];
+            
+            strongSelf.collectionView.hidden = NO;
+        }];
+        
+        return transitionAnimater;
+    }else{
+        
+        _collectionView.hidden = YES;
+        UIImageView * imageView = [self.delegate photoBrowser:self currentImageViewForIndex:_currentIndex];
+        CGRect endRect = CGRectZero;
+        if (imageView) {
+            endRect = [imageView.superview convertRect:imageView.frame toView:self.view];
+        }
+        
+        BKPhotoBrowserTransitionAnimater * transitionAnimater = [[BKPhotoBrowserTransitionAnimater alloc] initWithTransitionType:BKPhotoBrowserTransitionPop];
+        transitionAnimater.startImageView = self.interactiveTransition.startImageView;
+        transitionAnimater.endRect = endRect;
+        transitionAnimater.isNavHidden = _isNavHidden;
+        WEAK_SELF(self);
+        [transitionAnimater setEndTransitionAnimateAction:^{
+            STRONG_SELF(self);
+            
+            strongSelf.collectionView.hidden = NO;
+        }];
+        
+        return transitionAnimater;
     }
-    
-    BKPhotoBrowserTransitionAnimater * transitionAnimater = [[BKPhotoBrowserTransitionAnimater alloc] initWithTransitionType:BKPhotoBrowserTransitionPop];
-    transitionAnimater.startImageView = self.interactiveTransition.startImageView;
-    transitionAnimater.endRect = endRect;
-    WEAK_SELF(self);
-    [transitionAnimater setEndTransitionAnimateAction:^{
-        STRONG_SELF(self);
-        
-        strongSelf.collectionView.hidden = NO;
-    }];
-    
-    return transitionAnimater;
 }
 
-- (id<UIViewControllerInteractiveTransitioning>)interactionControllerForDismissal:(id<UIViewControllerAnimatedTransitioning>)animator
+- (id<UIViewControllerInteractiveTransitioning>)navigationController:(UINavigationController *)navigationController interactionControllerForAnimationController:(id<UIViewControllerAnimatedTransitioning>)animationController
 {
     return self.interactiveTransition.interation?self.interactiveTransition:nil;
 }
@@ -362,6 +383,9 @@
         _collectionView.showsHorizontalScrollIndicator = NO;
         _collectionView.hidden = YES;
         _collectionView.pagingEnabled = YES;
+        if (@available(iOS 11.0, *)) {
+            _collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+        }
 
         [_collectionView registerClass:[BKPhotoBrowserCollectionViewCell class] forCellWithReuseIdentifier:Photo_CollectionView_Identifier];
     }
@@ -490,7 +514,7 @@
 
     if (recoginzer.numberOfTapsRequired == 1) {
 
-        [self dismissViewControllerAnimated:YES completion:nil];
+        [self.nav popViewControllerAnimated:YES];
         
     }else if (recoginzer.numberOfTapsRequired == 2) {
         if (imageScrollView.zoomScale != 1) {

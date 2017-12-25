@@ -63,6 +63,6 @@
 /**
  显示方法
  */
--(void)showInVC:(UIViewController*)vc;
+-(void)showInNav:(UINavigationController*)nav;
 
 @end

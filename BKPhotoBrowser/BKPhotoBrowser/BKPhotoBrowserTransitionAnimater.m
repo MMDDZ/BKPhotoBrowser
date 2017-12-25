@@ -68,27 +68,29 @@
 - (void)popAnimation:(id<UIViewControllerContextTransitioning>)transitionContext
 {
     BKPhotoBrowser * fromVC = (BKPhotoBrowser *)[transitionContext viewControllerForKey:UITransitionContextFromViewControllerKey];
-    
-    [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:UIStatusBarAnimationFade];
-    
-    UIView * containerView = [transitionContext containerView];
-    [containerView addSubview:_startImageView];
+    UIViewController * toVC = [transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
     
     [[fromVC.view subviews] enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        if (obj != containerView) {
-            [obj setHidden:YES];
-        }
+        [obj setHidden:YES];
     }];
+    [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:UIStatusBarAnimationFade];
+    if (!_isNavHidden) {
+        [fromVC.navigationController setNavigationBarHidden:NO animated:YES];
+    }
+    
+    UIView * containerView = [transitionContext containerView];
+    [containerView insertSubview:toVC.view atIndex:0];
+    [containerView addSubview:_startImageView];
     
     [UIView animateWithDuration:[self transitionDuration:transitionContext] animations:^{
         
         if (CGRectEqualToRect(_endRect, CGRectZero)) {
             _startImageView.alpha = 0;
+            fromVC.view.alpha = 0;
         }else{
             _startImageView.frame = _endRect;
+            fromVC.view.alpha = 0.3;
         }
-        
-        fromVC.view.alpha = 0;
         
     } completion:^(BOOL finished) {
         if (self.endTransitionAnimateAction) {

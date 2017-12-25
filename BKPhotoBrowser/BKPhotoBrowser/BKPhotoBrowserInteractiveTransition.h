@@ -21,6 +21,7 @@
  */
 @property (nonatomic,strong) UIImageView * startImageView;
 
+
 - (void)addPanGestureForViewController:(BKPhotoBrowser *)viewController;
 
 @end

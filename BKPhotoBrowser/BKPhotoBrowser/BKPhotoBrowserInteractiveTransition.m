@@ -107,9 +107,9 @@
             _startPoint = CGPointZero;
             
             if (percentage > 0.4) {
-                [_vc dismissViewControllerAnimated:YES completion:nil];
+                [_vc.navigationController popViewControllerAnimated:YES];
             }else{
-            
+                
                 CGFloat duration = 0.25 * percentage * 2;
                 
                 [UIView animateWithDuration:duration animations:^{

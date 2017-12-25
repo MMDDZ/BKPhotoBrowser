@@ -165,6 +165,7 @@
 {
     [super viewWillAppear:animated];
     
+    _nav.delegate = self;
     [UIApplication sharedApplication].statusBarHidden = YES;
 }
 
@@ -538,6 +539,9 @@
                     WEAK_SELF(self);
                     [actionSheetView setCheckQrCodeAction:^(NSString *qrCodeContent) {
                         STRONG_SELF(self);
+                        
+                        _nav.delegate = nil;
+                        
                         if ([strongSelf.delegate respondsToSelector:@selector(photoBrowser:qrCodeContent:)]) {
                             [strongSelf.delegate photoBrowser:strongSelf qrCodeContent:qrCodeContent];
                         }

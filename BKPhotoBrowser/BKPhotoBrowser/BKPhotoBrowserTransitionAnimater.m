@@ -36,11 +36,14 @@
 {
     switch (_type) {
         case BKPhotoBrowserTransitionPresent:
+        {
             [self presentAnimation:transitionContext];
+        }
             break;
-            
         case BKPhotoBrowserTransitionDismiss:
+        {
             [self dismissAnimation:transitionContext];
+        }
             break;
     }
 }

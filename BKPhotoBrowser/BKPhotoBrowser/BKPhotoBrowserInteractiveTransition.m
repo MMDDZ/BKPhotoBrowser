@@ -142,10 +142,10 @@
                 return;
             }
             
+            [self cancelRecognizerMethodWithPercentage:percentage lastVC:self.lastVC];
+            
             _interation = NO;
             _startPoint = CGPointZero;
-            
-            [self cancelRecognizerMethodWithPercentage:percentage lastVC:self.lastVC];
         }
             break;
         default:

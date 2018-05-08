@@ -18,7 +18,7 @@ typedef NS_ENUM(NSUInteger, BKPhotoBrowserTransition) {
 @interface BKPhotoBrowserTransitionAnimater : NSObject <UIViewControllerAnimatedTransitioning>
 
 /**
- 透明百分比
+ 返回时背景透明百分比
  */
 @property (nonatomic,assign) CGFloat alphaPercentage;
 /**

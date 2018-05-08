@@ -8,14 +8,19 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import "FLAnimatedImage.h"
 
 typedef NS_ENUM(NSUInteger, BKPhotoBrowserTransition) {
-    BKPhotoBrowserTransitionPush = 0,
-    BKPhotoBrowserTransitionPop,
+    BKPhotoBrowserTransitionPresent = 0,
+    BKPhotoBrowserTransitionDismiss,
 };
 
 @interface BKPhotoBrowserTransitionAnimater : NSObject <UIViewControllerAnimatedTransitioning>
 
+/**
+ 透明百分比
+ */
+@property (nonatomic,assign) CGFloat alphaPercentage;
 /**
  起始imageView
  */
@@ -24,10 +29,6 @@ typedef NS_ENUM(NSUInteger, BKPhotoBrowserTransition) {
  结束点frame
  */
 @property (nonatomic,assign) CGRect endRect;
-/**
- 导航是否隐藏
- */
-@property (nonatomic,assign) BOOL isNavHidden;
 /**
  转场动画完成回调
  */

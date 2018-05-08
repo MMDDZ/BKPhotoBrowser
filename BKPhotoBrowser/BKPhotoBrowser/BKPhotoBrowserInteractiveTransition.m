@@ -8,51 +8,33 @@
 
 #import "BKPhotoBrowserInteractiveTransition.h"
 
-@interface BKPhotoBrowserInteractiveTransition()
+@interface BKPhotoBrowserInteractiveTransition()<UIGestureRecognizerDelegate>
 
-/**
- 添加手势的vc
- */
-@property (nonatomic, weak) BKPhotoBrowser * vc;
-/**
- 图片起始位置
- */
-@property (nonatomic, assign) CGRect startImageViewRect;
-/**
- 手势起始点
- */
-@property (nonatomic, assign) CGPoint startPoint;
-/**
- 是否手势移动
- */
-@property (nonatomic, assign) BOOL isMoveFlag;
-/**
- x轴移动
- */
-@property (nonatomic, assign) CGFloat xDistance;
-/**
- y轴移动
- */
-@property (nonatomic, assign) CGFloat yDistance;
+@property (nonatomic,weak) BKPhotoBrowser * vc;//添加手势的vc
+@property (nonatomic,assign) CGFloat startZoomScale;//图片起始在scrollview中缩放大小
+@property (nonatomic,assign) CGPoint startContentOffset;//图片起始在scrollview中的偏移量
+@property (nonatomic,assign) CGRect startImageViewRect;//图片起始在scrollview中的大小
+@property (nonatomic,assign) CGPoint startPoint;//手势起始点
+@property (nonatomic,assign) CGRect startPanRect;//手势起始滑动时图片的大小
 
+@property (nonatomic,strong) UIPanGestureRecognizer * panGesture;
+
+@property (nonatomic,assign) CGFloat changeScale;//过程中改变的大小程度
 
 @end
 
 @implementation BKPhotoBrowserInteractiveTransition
 
--(void)setStartImageView:(UIImageView *)startImageView
-{
-    _startImageView = startImageView;
-    _startImageViewRect = _startImageView.frame;
-}
-
 #pragma mark - 手势
 
 - (void)addPanGestureForViewController:(BKPhotoBrowser *)viewController
 {
-    UIPanGestureRecognizer * panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGesture:)];
     self.vc = viewController;
-    [viewController.view addGestureRecognizer:panGesture];
+    
+    _panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGesture:)];
+    _panGesture.maximumNumberOfTouches = 1;
+    _panGesture.delegate = self;
+    [viewController.view addGestureRecognizer:_panGesture];
 }
 
 /**
@@ -61,80 +43,175 @@
 - (void)panGesture:(UIPanGestureRecognizer *)panGesture
 {
     CGPoint nowPoint = [panGesture locationInView:_vc.view];
-    CGFloat distance = 0;
-    if (!CGPointEqualToPoint(nowPoint, CGPointZero) && !CGPointEqualToPoint(_startPoint, CGPointZero)) {
-        _xDistance = (nowPoint.x - _startPoint.x);
-        _yDistance = (nowPoint.y - _startPoint.y);
-        distance = sqrt(pow(_xDistance, 2) + pow(_yDistance, 2));
-    }
-    CGFloat percentage = distance / ([UIScreen mainScreen].bounds.size.width / 2);
-    if (fabs(percentage) > 1) {
-        percentage = 1;
-    }
     
-    UIViewController * lastVC = [_vc.navigationController viewControllers][[[_vc.navigationController viewControllers] count] - 2];
+    CGFloat percentage = (nowPoint.y - _startPoint.y) / [UIScreen mainScreen].bounds.size.height;
+    if (percentage > 1) {
+        percentage = 1;
+    }else if (percentage < -0.5) {
+        percentage = -0.5;
+    }
     
     switch (panGesture.state) {
         case UIGestureRecognizerStateBegan:
         {
             _interation = YES;
-            _startPoint = [panGesture locationInView:_vc.view];
+            _startZoomScale = _supperScrollView.zoomScale;
+            _startContentOffset = _supperScrollView.contentOffset;
+            _startPoint = [panGesture locationInView:_panGesture.view];
+            
+            CGPoint velocity = [panGesture velocityInView:panGesture.view];
+            if (velocity.y < fabs(velocity.x)) {
+                panGesture.enabled = NO;
+                return;
+            }
+            
+            [[_vc.view subviews] enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                [obj setHidden:YES];
+            }];
+          
+            if (!self.isStatusBarHidden) {
+                [UIApplication sharedApplication].statusBarHidden = NO;
+            }
+            
+            _startPanRect = [_supperScrollView convertRect:_startImageView.frame toView:self.vc.view];
+            
+            _supperScrollView.contentOffset = CGPointZero;
+            _supperScrollView.zoomScale = 1;
+            _startImageViewRect = _startImageView.frame;
+            
+            _startImageView.frame = _startPanRect;
+            
+            [_vc.view addSubview:_startImageView];
         }
             break;
         case UIGestureRecognizerStateChanged:
         {
-            if (!_isMoveFlag) {
-                _isMoveFlag = YES;
-                [[_vc.view subviews] enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                    [obj setHidden:YES];
-                }];
-                [UIApplication sharedApplication].statusBarHidden = NO;
+            CGPoint translation = [panGesture translationInView:panGesture.view];
+            CGFloat newY = _startImageView.frame.origin.y + translation.y;
+            
+            CGRect newRect = _startImageView.frame;
+            if (newY <= 0) {
+                _vc.view.alpha = 1;
+                _startImageView.transform = CGAffineTransformMakeScale(1, 1);
+                newRect.origin.y = newRect.origin.y + translation.y/3.f;
+            }else if (newY > 0 && newY <= _startPanRect.origin.y) {
+                _vc.view.alpha = 1;
+                _startImageView.transform = CGAffineTransformMakeScale(1, 1);
+                newRect.origin.y = newY;
+            }else {
+                if (percentage < 0) {
+                    self.changeScale = 1;
+                }else{
+                    self.changeScale = 1 - fabs(0.7*percentage);
+                }
+                
+                if (_vc.navigationController) {
+                    _vc.navigationController.view.backgroundColor = [UIColor colorWithWhite:1 alpha:0];
+                }
+                _vc.view.backgroundColor = [UIColor colorWithWhite:0 alpha:self.changeScale];
+                
+                _startImageView.transform = CGAffineTransformMakeScale(self.changeScale, self.changeScale);
+                newRect.origin.y = newY;
             }
-            [[_vc.view superview] insertSubview:lastVC.view atIndex:0];
-            [[_vc.view superview] addSubview:_startImageView];
-            
-            CGFloat scale = 1 - fabs(0.4*percentage);
-            _startImageView.center = CGPointMake(CGRectGetMidX(_startImageViewRect) + _xDistance, CGRectGetMidY(_startImageViewRect) + _yDistance);
-            _startImageView.transform = CGAffineTransformMakeScale(scale, scale);
-            
-            _vc.view.alpha = 1 - fabs(0.7*percentage);
+            newRect.origin.x = newRect.origin.x + translation.x;
+            _startImageView.frame = newRect;
         }
             break;
         case UIGestureRecognizerStateEnded:
         {
+            if (!panGesture.enabled) {
+                panGesture.enabled = YES;
+                return;
+            }
+            
+            if (percentage > 0.2) {
+                [_vc dismissViewControllerAnimated:YES completion:nil];
+            }else{
+                [self cancelRecognizerMethodWithPercentage:percentage lastVC:self.lastVC];
+            }
+            
             _interation = NO;
-            _isMoveFlag = NO;
+            _startPoint = CGPointZero;
+        }
+            break;
+        case UIGestureRecognizerStateCancelled:
+        case UIGestureRecognizerStateFailed:
+        {
+            if (!panGesture.enabled) {
+                panGesture.enabled = YES;
+                return;
+            }
+            
+            _interation = NO;
             _startPoint = CGPointZero;
             
-            if (percentage > 0.4) {
-                [_vc.navigationController popViewControllerAnimated:YES];
-            }else{
-                
-                CGFloat duration = 0.25 * percentage * 2;
-                
-                [UIView animateWithDuration:duration animations:^{
-                    
-                    _startImageView.center = CGPointMake(CGRectGetMidX(_startImageViewRect), CGRectGetMidY(_startImageViewRect));
-                    _startImageView.transform = CGAffineTransformMakeScale(1, 1);
-                    
-                    _vc.view.alpha = 1;
-                    
-                } completion:^(BOOL finished) {
-                    
-                    [lastVC.view removeFromSuperview];
-                    [_startImageView removeFromSuperview];
-                    
-                    [[_vc.view subviews] enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                        [obj setHidden:NO];
-                    }];
-                    [UIApplication sharedApplication].statusBarHidden = YES;
-                }];
-            }
-            break;
+            [self cancelRecognizerMethodWithPercentage:percentage lastVC:self.lastVC];
         }
+            break;
         default:
             break;
     }
+    
+    [panGesture setTranslation:CGPointZero inView:panGesture.view];
+}
+
+-(void)cancelRecognizerMethodWithPercentage:(CGFloat)percentage lastVC:(UIViewController*)lastVC
+{
+    CGFloat duration = percentage < 0 ? fabs(0.75 * percentage) : (1.25 * percentage);
+    
+    [UIView animateWithDuration:duration animations:^{
+        
+        self.startImageView.transform = CGAffineTransformIdentity;
+        self.startImageView.frame = self.startPanRect;
+        
+        if (self.vc.navigationController) {
+            self.vc.navigationController.view.backgroundColor = [UIColor colorWithWhite:1 alpha:0];
+        }
+        self.vc.view.backgroundColor = [UIColor colorWithWhite:0 alpha:1];
+        
+    } completion:^(BOOL finished) {
+        
+        [self.supperScrollView addSubview:self.startImageView];
+        self.startImageView.frame = self.startImageViewRect;
+        self.supperScrollView.zoomScale = self.startZoomScale;
+        self.supperScrollView.contentOffset = self.startContentOffset;
+        
+        [lastVC.view removeFromSuperview];
+        
+        [[self.vc.view subviews] enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            [obj setHidden:NO];
+        }];
+        
+        [UIApplication sharedApplication].statusBarHidden = YES;
+    }];
+}
+
+#pragma mark - UIGestureRecognizerDelegate
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+{
+    if (gestureRecognizer == _panGesture) {
+        CGPoint point = [_panGesture velocityInView:_panGesture.view];
+        if (_supperScrollView.contentOffset.y <= 0 && point.y > fabs(point.x)) {
+            otherGestureRecognizer.enabled = NO;
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                otherGestureRecognizer.enabled = YES;
+            });
+        }
+    }
+    return NO;
+}
+
+#pragma mark - 获取当前显示view的透明百分比
+
+/**
+ 获取当前显示view的透明百分比
+ 
+ @return 透明百分比
+ */
+-(CGFloat)getCurrentViewAlphaPercentage
+{
+    return self.changeScale;
 }
 
 @end

@@ -14,7 +14,7 @@
 @required
 
 /**
- 返回当前选中索引的imageView
+ 返回当前选中索引的imageView(gif图为FLAnimatedImageView类型)
 
  @param photoBrowser 图片浏览器
  @param index 当前索引
@@ -38,8 +38,9 @@
 
  @param photoBrowser 图片浏览器
  @param qrCodeContent 二维码内容
+ @param photoBrowserNav 图片浏览器导航
  */
--(void)photoBrowser:(BKPhotoBrowser *)photoBrowser qrCodeContent:(NSString*)qrCodeContent;
+-(void)photoBrowser:(BKPhotoBrowser *)photoBrowser qrCodeContent:(NSString*)qrCodeContent photoBrowserNav:(UINavigationController*)photoBrowserNav;
 
 @end
 
@@ -63,6 +64,6 @@
 /**
  显示方法
  */
--(void)showInNav:(UINavigationController*)nav;
+-(void)showInVC:(UIViewController*)displayVC;
 
 @end

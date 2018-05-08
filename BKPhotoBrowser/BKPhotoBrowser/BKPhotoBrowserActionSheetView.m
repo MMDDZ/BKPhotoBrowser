@@ -225,7 +225,7 @@
             __block NSString *assetId = nil;
             // 存储图片到"相机胶卷"
             [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
-                assetId = [PHAssetCreationRequest creationRequestForAssetFromImage:_targetImage].placeholderForCreatedAsset.localIdentifier;
+                assetId = [PHAssetCreationRequest creationRequestForAssetFromImage:self.targetImage].placeholderForCreatedAsset.localIdentifier;
             } completionHandler:^(BOOL success, NSError * _Nullable error) {
                 if (error) {
                     dispatch_async(dispatch_get_main_queue(), ^{

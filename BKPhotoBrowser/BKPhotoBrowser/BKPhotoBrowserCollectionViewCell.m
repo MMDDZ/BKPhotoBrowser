@@ -33,6 +33,9 @@
         
         _showImageView = [[FLAnimatedImageView alloc]init];
         _showImageView.userInteractionEnabled = YES;
+        _showImageView.clipsToBounds = YES;
+        _showImageView.contentMode = UIViewContentModeScaleAspectFill;
+        _showImageView.runLoopMode = NSRunLoopCommonModes;
         [_imageScrollView addSubview:_showImageView];
         
     }

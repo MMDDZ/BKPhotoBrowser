@@ -15,6 +15,7 @@
 		1D452D251FF08A1300FE77D1 /* BKPhotoBrowserIndicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D452D1C1FF08A1300FE77D1 /* BKPhotoBrowserIndicator.m */; };
 		1D452D261FF08A1300FE77D1 /* BKPhotoBrowserActionSheetView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D452D1D1FF08A1300FE77D1 /* BKPhotoBrowserActionSheetView.m */; };
 		1D452D271FF08A1300FE77D1 /* BKPhotoBrowser.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 1D452D1F1FF08A1300FE77D1 /* BKPhotoBrowser.bundle */; };
+		1D4BF91E20A18185006811DC /* 3.gif in Resources */ = {isa = PBXBuildFile; fileRef = 1D4BF91D20A18185006811DC /* 3.gif */; };
 		2A125A541D44B29B00400E9E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A125A531D44B29B00400E9E /* main.m */; };
 		2A125A571D44B29B00400E9E /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A125A561D44B29B00400E9E /* AppDelegate.m */; };
 		2A125A5A1D44B29B00400E9E /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A125A591D44B29B00400E9E /* ViewController.m */; };
@@ -62,6 +63,7 @@
 		1D452D1D1FF08A1300FE77D1 /* BKPhotoBrowserActionSheetView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BKPhotoBrowserActionSheetView.m; sourceTree = "<group>"; };
 		1D452D1E1FF08A1300FE77D1 /* BKPhotoBrowserTransitionAnimater.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BKPhotoBrowserTransitionAnimater.h; sourceTree = "<group>"; };
 		1D452D1F1FF08A1300FE77D1 /* BKPhotoBrowser.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = BKPhotoBrowser.bundle; sourceTree = "<group>"; };
+		1D4BF91D20A18185006811DC /* 3.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = 3.gif; sourceTree = "<group>"; };
 		2A125A4F1D44B29B00400E9E /* BKPhotoBrowser.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BKPhotoBrowser.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2A125A531D44B29B00400E9E /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		2A125A551D44B29B00400E9E /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -179,6 +181,7 @@
 				2A125A561D44B29B00400E9E /* AppDelegate.m */,
 				2A125A581D44B29B00400E9E /* ViewController.h */,
 				2A125A591D44B29B00400E9E /* ViewController.m */,
+				1D4BF91D20A18185006811DC /* 3.gif */,
 				2A125A5E1D44B29B00400E9E /* Assets.xcassets */,
 				2A125A601D44B29B00400E9E /* LaunchScreen.storyboard */,
 				2A125A631D44B29B00400E9E /* Info.plist */,
@@ -289,7 +292,7 @@
 		2A125A471D44B29B00400E9E /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0920;
+				LastUpgradeCheck = 0930;
 				ORGANIZATIONNAME = BIKE;
 				TargetAttributes = {
 					2A125A4E1D44B29B00400E9E = {
@@ -325,6 +328,7 @@
 				2AC176541DFD9D180018E7B0 /* Info.plist in Resources */,
 				2A125A621D44B29B00400E9E /* LaunchScreen.storyboard in Resources */,
 				2A125A5F1D44B29B00400E9E /* Assets.xcassets in Resources */,
+				1D4BF91E20A18185006811DC /* 3.gif in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -396,12 +400,14 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -447,12 +453,14 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;

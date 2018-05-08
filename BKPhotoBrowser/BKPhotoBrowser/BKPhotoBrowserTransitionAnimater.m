@@ -22,6 +22,7 @@
     self = [super init];
     if (self) {
         _type = type;
+        self.alphaPercentage = 1;
     }
     return self;
 }
@@ -34,70 +35,88 @@
 - (void)animateTransition:(id <UIViewControllerContextTransitioning>)transitionContext
 {
     switch (_type) {
-        case BKPhotoBrowserTransitionPush:
-            [self pushAnimation:transitionContext];
+        case BKPhotoBrowserTransitionPresent:
+            [self presentAnimation:transitionContext];
             break;
             
-        case BKPhotoBrowserTransitionPop:
-            [self popAnimation:transitionContext];
+        case BKPhotoBrowserTransitionDismiss:
+            [self dismissAnimation:transitionContext];
             break;
     }
 }
 
-- (void)pushAnimation:(id<UIViewControllerContextTransitioning>)transitionContext
+- (void)presentAnimation:(id<UIViewControllerContextTransitioning>)transitionContext
 {
+    UIViewController * fromVC = [transitionContext viewControllerForKey:UITransitionContextFromViewControllerKey];
     BKPhotoBrowser * toVC = (BKPhotoBrowser *)[transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
-    toVC.view.alpha = 0;
+    toVC.view.backgroundColor = [UIColor colorWithWhite:0 alpha:0];
     
     UIView * containerView = [transitionContext containerView];
+    
+    [containerView addSubview:fromVC.view];
     [containerView addSubview:toVC.view];
     [containerView addSubview:_startImageView];
     
     [UIView animateWithDuration:[self transitionDuration:transitionContext] animations:^{
-        _startImageView.frame = _endRect;
-        toVC.view.alpha = 1;
+        self.startImageView.frame = self.endRect;
+        toVC.view.backgroundColor = [UIColor colorWithWhite:0 alpha:1];
     } completion:^(BOOL finished) {
+        
+        [self.startImageView removeFromSuperview];
+        [transitionContext completeTransition:YES];
+        
         if (self.endTransitionAnimateAction) {
             self.endTransitionAnimateAction();
         }
-        [_startImageView removeFromSuperview];
-        [transitionContext completeTransition:YES];
     }];
 }
 
-- (void)popAnimation:(id<UIViewControllerContextTransitioning>)transitionContext
+- (void)dismissAnimation:(id<UIViewControllerContextTransitioning>)transitionContext
 {
-    BKPhotoBrowser * fromVC = (BKPhotoBrowser *)[transitionContext viewControllerForKey:UITransitionContextFromViewControllerKey];
+    UIViewController * fromVC = [transitionContext viewControllerForKey:UITransitionContextFromViewControllerKey];
     UIViewController * toVC = [transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
     
-    [[fromVC.view subviews] enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        [obj setHidden:YES];
-    }];
-    [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:UIStatusBarAnimationFade];
-    if (!_isNavHidden) {
-        [fromVC.navigationController setNavigationBarHidden:NO animated:YES];
+    BKPhotoBrowser * real_fromVC = nil;
+    if ([fromVC isKindOfClass:[UINavigationController class]]) {
+        real_fromVC = (BKPhotoBrowser*)[((UINavigationController*)fromVC).viewControllers firstObject];
+        fromVC.view.backgroundColor = [UIColor colorWithWhite:1 alpha:0];
+    }else{
+        real_fromVC = (BKPhotoBrowser*)fromVC;
     }
     
-    UIView * containerView = [transitionContext containerView];
-    [containerView insertSubview:toVC.view atIndex:0];
-    [containerView addSubview:_startImageView];
+    if (![[real_fromVC.view subviews] containsObject:self.startImageView]) {
+        CGRect rect = [[self.startImageView superview] convertRect:self.startImageView.frame toView:fromVC.view];
+        self.startImageView.frame = rect;
+        [fromVC.view addSubview:self.startImageView];
+    }
     
-    [UIView animateWithDuration:[self transitionDuration:transitionContext] animations:^{
-        
-        if (CGRectEqualToRect(_endRect, CGRectZero)) {
-            _startImageView.alpha = 0;
-            fromVC.view.alpha = 0;
-        }else{
-            _startImageView.frame = _endRect;
-            fromVC.view.alpha = 0.3;
+    [[real_fromVC.view subviews] enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if (obj != self.startImageView) {
+            obj.hidden = YES;
         }
-        
+    }];
+    real_fromVC.view.backgroundColor = [UIColor colorWithWhite:0 alpha:self.alphaPercentage];
+
+    UIView * containerView = [transitionContext containerView];
+    [containerView addSubview:toVC.view];
+    [containerView addSubview:fromVC.view];
+
+    [UIView animateWithDuration:[self transitionDuration:transitionContext] animations:^{
+        if (CGRectEqualToRect(self.endRect, CGRectZero)) {
+            self.startImageView.alpha = 0;
+        }else{
+            self.startImageView.frame = self.endRect;
+        }
+        real_fromVC.view.backgroundColor = [UIColor colorWithWhite:0 alpha:0];
     } completion:^(BOOL finished) {
+        [self.startImageView removeFromSuperview];
+        [transitionContext completeTransition:YES];
+        
+        [[UIApplication sharedApplication].keyWindow addSubview:toVC.view];
+
         if (self.endTransitionAnimateAction) {
             self.endTransitionAnimateAction();
         }
-        [transitionContext completeTransition:YES];
-        [_startImageView removeFromSuperview];
     }];
 }
 

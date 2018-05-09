@@ -185,8 +185,6 @@
         self.supperScrollView.zoomScale = self.startZoomScale;
         self.supperScrollView.contentOffset = self.startContentOffset;
         
-        [lastVC.view removeFromSuperview];
-        
         [[self.vc.view subviews] enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
             [obj setHidden:NO];
         }];

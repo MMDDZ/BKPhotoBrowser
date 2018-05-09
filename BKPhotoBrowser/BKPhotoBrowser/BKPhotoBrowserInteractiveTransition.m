@@ -89,15 +89,22 @@
             CGPoint translation = [panGesture translationInView:panGesture.view];
             CGFloat newY = _startImageView.frame.origin.y + translation.y;
             
-            CGRect newRect = _startImageView.frame;
             if (newY <= 0) {
                 _vc.view.alpha = 1;
                 _startImageView.transform = CGAffineTransformMakeScale(1, 1);
+                
+                CGRect newRect = _startImageView.frame;
                 newRect.origin.y = newRect.origin.y + translation.y/3.f;
+                newRect.origin.x = newRect.origin.x + translation.x;
+                _startImageView.frame = newRect;
             }else if (newY > 0 && newY <= _startPanRect.origin.y) {
                 _vc.view.alpha = 1;
                 _startImageView.transform = CGAffineTransformMakeScale(1, 1);
+                
+                CGRect newRect = _startImageView.frame;
                 newRect.origin.y = newY;
+                newRect.origin.x = newRect.origin.x + translation.x;
+                _startImageView.frame = newRect;
             }else {
                 if (percentage < 0) {
                     self.changeScale = 1;
@@ -110,11 +117,13 @@
                 }
                 _vc.view.backgroundColor = [UIColor colorWithWhite:0 alpha:self.changeScale];
                 
-                _startImageView.transform = CGAffineTransformMakeScale(self.changeScale, self.changeScale);
+                CGRect newRect = _startImageView.frame;
                 newRect.origin.y = newY;
+                newRect.origin.x = newRect.origin.x + translation.x;
+                _startImageView.frame = newRect;
+                
+                _startImageView.transform = CGAffineTransformMakeScale(self.changeScale, self.changeScale);
             }
-            newRect.origin.x = newRect.origin.x + translation.x;
-            _startImageView.frame = newRect;
         }
             break;
         case UIGestureRecognizerStateEnded:

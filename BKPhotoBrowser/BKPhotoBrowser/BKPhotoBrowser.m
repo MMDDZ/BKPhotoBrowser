@@ -403,20 +403,6 @@
 {
     BKPhotoBrowserCollectionViewCell * cell = (BKPhotoBrowserCollectionViewCell*)[collectionView dequeueReusableCellWithReuseIdentifier:Photo_CollectionView_Identifier forIndexPath:indexPath];
 
-    UIImageView * imageView = [self.delegate photoBrowser:self currentImageViewForIndex:indexPath.item];
-    if (imageView) {
-        if (imageView.image) {
-            cell.showImageView.image = imageView.image;
-        }else{
-            cell.showImageView.image = self.errorImage;
-        }
-    }else{
-        cell.showImageView.image = self.errorImage;
-    }
-    CGRect targetFrame = [self calculateTargetFrameWithImageView:imageView];
-    cell.showImageView.frame = targetFrame;
-    cell.imageScrollView.contentSize = CGSizeMake(cell.showImageView.frame.size.width, cell.showImageView.frame.size.height);
-
     UITapGestureRecognizer * deleteRecognizer = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(imageScrollViewRecognizer:)];
     deleteRecognizer.numberOfTapsRequired = 1;
     [cell.imageScrollView addGestureRecognizer:deleteRecognizer];
@@ -447,6 +433,20 @@
 
     self.interactiveTransition.startImageView = aCell.showImageView;
     self.interactiveTransition.supperScrollView = aCell.imageScrollView;
+    
+    UIImageView * imageView = [self.delegate photoBrowser:self currentImageViewForIndex:indexPath.item];
+    if (imageView) {
+        if (imageView.image) {
+            aCell.showImageView.image = imageView.image;
+        }else{
+            aCell.showImageView.image = self.errorImage;
+        }
+    }else{
+        aCell.showImageView.image = self.errorImage;
+    }
+    CGRect targetFrame = [self calculateTargetFrameWithImageView:imageView];
+    aCell.showImageView.frame = targetFrame;
+    aCell.imageScrollView.contentSize = CGSizeMake(aCell.showImageView.frame.size.width, aCell.showImageView.frame.size.height);
 
     BKPhotoBrowserIndicator * oldIndicator = [aCell viewWithTag:1];
     [oldIndicator removeFromSuperview];

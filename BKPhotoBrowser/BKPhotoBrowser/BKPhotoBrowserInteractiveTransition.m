@@ -62,6 +62,9 @@
             CGPoint velocity = [panGesture velocityInView:panGesture.view];
             if (velocity.y < fabs(velocity.x)) {
                 panGesture.enabled = NO;
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    panGesture.enabled = YES;
+                });
                 return;
             }
             
@@ -128,11 +131,6 @@
             break;
         case UIGestureRecognizerStateEnded:
         {
-            if (!panGesture.enabled) {
-                panGesture.enabled = YES;
-                return;
-            }
-            
             if (percentage > 0.2) {
                 [_vc dismissViewControllerAnimated:YES completion:nil];
             }else{
@@ -146,11 +144,6 @@
         case UIGestureRecognizerStateCancelled:
         case UIGestureRecognizerStateFailed:
         {
-            if (!panGesture.enabled) {
-                panGesture.enabled = YES;
-                return;
-            }
-            
             [self cancelRecognizerMethodWithPercentage:percentage lastVC:self.lastVC];
             
             _interation = NO;

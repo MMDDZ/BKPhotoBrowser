@@ -43,7 +43,6 @@
 		2AC1764B1DFD93E10018E7B0 /* UIView+WebCacheOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 2AC176371DFD93E10018E7B0 /* UIView+WebCacheOperation.m */; };
 		2AC176521DFD9D180018E7B0 /* FLAnimatedImage.m in Sources */ = {isa = PBXBuildFile; fileRef = 2AC1764E1DFD9D180018E7B0 /* FLAnimatedImage.m */; };
 		2AC176531DFD9D180018E7B0 /* FLAnimatedImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = 2AC176501DFD9D180018E7B0 /* FLAnimatedImageView.m */; };
-		2AC176541DFD9D180018E7B0 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2AC176511DFD9D180018E7B0 /* Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -118,7 +117,6 @@
 		2AC1764E1DFD9D180018E7B0 /* FLAnimatedImage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FLAnimatedImage.m; sourceTree = "<group>"; };
 		2AC1764F1DFD9D180018E7B0 /* FLAnimatedImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLAnimatedImageView.h; sourceTree = "<group>"; };
 		2AC176501DFD9D180018E7B0 /* FLAnimatedImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FLAnimatedImageView.m; sourceTree = "<group>"; };
-		2AC176511DFD9D180018E7B0 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -261,7 +259,6 @@
 				2AC1764E1DFD9D180018E7B0 /* FLAnimatedImage.m */,
 				2AC1764F1DFD9D180018E7B0 /* FLAnimatedImageView.h */,
 				2AC176501DFD9D180018E7B0 /* FLAnimatedImageView.m */,
-				2AC176511DFD9D180018E7B0 /* Info.plist */,
 			);
 			path = FLAnimatedImage;
 			sourceTree = "<group>";
@@ -325,7 +322,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1D452D271FF08A1300FE77D1 /* BKPhotoBrowser.bundle in Resources */,
-				2AC176541DFD9D180018E7B0 /* Info.plist in Resources */,
 				2A125A621D44B29B00400E9E /* LaunchScreen.storyboard in Resources */,
 				2A125A5F1D44B29B00400E9E /* Assets.xcassets in Resources */,
 				1D4BF91E20A18185006811DC /* 3.gif in Resources */,

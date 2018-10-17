@@ -104,23 +104,25 @@
     [containerView addSubview:toVC.view];
     [containerView addSubview:fromVC.view];
 
-    [UIView animateWithDuration:[self transitionDuration:transitionContext] animations:^{
-        if (CGRectEqualToRect(self.endRect, CGRectZero)) {
-            self.startImageView.alpha = 0;
-        }else{
-            self.startImageView.frame = self.endRect;
-        }
-        real_fromVC.view.backgroundColor = [UIColor colorWithWhite:0 alpha:0];
-    } completion:^(BOOL finished) {
-        [self.startImageView removeFromSuperview];
-        [transitionContext completeTransition:YES];
-        
-        [[UIApplication sharedApplication].keyWindow addSubview:toVC.view];
-
-        if (self.endTransitionAnimateAction) {
-            self.endTransitionAnimateAction();
-        }
-    }];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [UIView animateWithDuration:[self transitionDuration:transitionContext] animations:^{
+            if (CGRectEqualToRect(self.endRect, CGRectZero)) {
+                self.startImageView.alpha = 0;
+            }else{
+                self.startImageView.frame = self.endRect;
+            }
+            real_fromVC.view.backgroundColor = [UIColor colorWithWhite:0 alpha:0];
+        } completion:^(BOOL finished) {
+            [self.startImageView removeFromSuperview];
+            [transitionContext completeTransition:YES];
+            
+            [[UIApplication sharedApplication].keyWindow addSubview:toVC.view];
+            
+            if (self.endTransitionAnimateAction) {
+                self.endTransitionAnimateAction();
+            }
+        }];
+    });
 }
 
 @end

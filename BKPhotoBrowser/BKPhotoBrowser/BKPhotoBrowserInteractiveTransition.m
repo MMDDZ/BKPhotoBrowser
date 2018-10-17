@@ -60,7 +60,7 @@
             _startPoint = [panGesture locationInView:_panGesture.view];
             
             CGPoint velocity = [panGesture velocityInView:panGesture.view];
-            if (velocity.y < fabs(velocity.x)) {
+            if (fabs(velocity.y) < fabs(velocity.x)) {
                 panGesture.enabled = NO;
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     panGesture.enabled = YES;

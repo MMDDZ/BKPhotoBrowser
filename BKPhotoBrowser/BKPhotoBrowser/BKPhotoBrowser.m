@@ -9,6 +9,7 @@
 #define Photo_CollectionView_Identifier @"photo_cell"
 
 #import "BKPhotoBrowser.h"
+#import <objc/message.h>
 #import "BKPhotoBrowserCollectionViewCell.h"
 #import "BKPhotoBrowserCollectionViewFlowLayout.h"
 #import "BKPhotoBrowserConfig.h"
@@ -30,10 +31,6 @@
  */
 @property (nonatomic,strong) UINavigationController * nav;
 /**
- 状态栏是否隐藏
- */
-@property (nonatomic,assign) BOOL isStatusBarHidden;
-/**
  显示view
  */
 @property (nonatomic,strong) UICollectionView * collectionView;
@@ -54,6 +51,22 @@
  索引后的阴影
  */
 @property (nonatomic,strong) UIView * numLabShadowView;
+
+/**
+ 进来之前 状态栏是否隐藏
+ */
+@property (nonatomic,assign) BOOL isStatusBarHidden;
+@property (nonatomic,assign) UIStatusBarStyle statusBarStyle;//状态栏样式
+@property (nonatomic,assign) BOOL statusBarHidden;//状态栏是否隐藏
+@property (nonatomic,assign) UIStatusBarAnimation statusBarUpdateAnimation;//状态栏更新动画
+
+/**
+ 状态栏是否隐藏(带动画)
+ 
+ @param hidden 是否隐藏
+ @param animation 动画类型
+ */
+-(void)setStatusBarHidden:(BOOL)hidden withAnimation:(UIStatusBarAnimation)animation;
 
 @end
 
@@ -86,7 +99,22 @@
     if ([url isKindOfClass:[NSData class]]) {
         return (NSData*)url;
     }
-    return [[[SDWebImageManager sharedManager] imageCache] diskImageDataBySearchingAllPathsForKey:url];
+    
+    NSString * originalMethodName = @"diskImageDataBySearchingAllPathsForKey:";
+    
+    u_int count = 0;
+    Method * methods = class_copyMethodList([self class], &count);
+    for (int i = 0; i < count; i++) {
+        SEL methodName  = method_getName(methods[i]);
+        NSString * methodString = NSStringFromSelector(methodName);
+        if ([originalMethodName isEqualToString:methodString]){
+            free(methods);
+            NSData * data = ((id (*)(id, SEL, id))objc_msgSend)(self, methodName, url);
+            return data;
+        }
+    }
+    free(methods);
+    return nil;
 }
 
 -(void)storeImageWithImageData:(NSData*)imageData url:(NSString*)url
@@ -148,6 +176,7 @@
 -(void)showInVC:(UIViewController*)displayVC
 {
     _lastVC = displayVC;
+    self.isStatusBarHidden = [UIApplication sharedApplication].statusBarHidden;
     
     _nav = [[UINavigationController alloc]initWithRootViewController:self];
     _nav.navigationBarHidden = YES;
@@ -155,10 +184,7 @@
     _nav.modalPresentationStyle = UIModalPresentationCustom;
     [displayVC presentViewController:_nav animated:YES completion:nil];
     
-    self.isStatusBarHidden = [UIApplication sharedApplication].statusBarHidden;
-    if (!self.isStatusBarHidden) {
-        [UIApplication sharedApplication].statusBarHidden = YES;
-    }
+    self.statusBarHidden = YES;
 }
 
 #pragma mark - ViewDidLoad
@@ -178,9 +204,7 @@
 {
     [super viewDidAppear:animated];
     
-    if (!self.isStatusBarHidden) {
-        [UIApplication sharedApplication].statusBarHidden = YES;
-    }
+    self.statusBarHidden = YES;
     
     self.nav.navigationBarHidden = YES;
 }
@@ -190,7 +214,7 @@
     [super viewDidDisappear:animated];
     
     if (!self.isStatusBarHidden) {
-        [UIApplication sharedApplication].statusBarHidden = NO;
+        self.statusBarHidden = NO;
     }
 }
 
@@ -232,7 +256,7 @@
     }];
     
     return transitionAnimater;
-
+    
 }
 
 - (nullable id <UIViewControllerAnimatedTransitioning>)animationControllerForDismissedController:(UIViewController *)dismissed
@@ -263,14 +287,14 @@
 
 /**
  获取初始点击图片
-
+ 
  @return 图片
  */
 -(UIImageView*)getTapImageView
 {
     UIImageView * imageView = [self.delegate photoBrowser:self currentImageViewForIndex:_currentIndex];
     CGRect parentRect = [imageView.superview convertRect:imageView.frame toView:self.view];
-
+    
     UIImageView * newImageView = [[UIImageView alloc]initWithFrame:parentRect];
     newImageView.contentMode = UIViewContentModeScaleAspectFill;
     newImageView.clipsToBounds = YES;
@@ -279,13 +303,13 @@
     }else{
         newImageView.image = self.errorImage;
     }
-
+    
     return newImageView;
 }
 
 /**
  获取初始图片动画后frame
-
+ 
  @param imageView 初始点击图片
  @return frame
  */
@@ -303,7 +327,7 @@
         targetFrame.size.height = self.view.frame.size.width;
         targetFrame.origin.y = (self.view.frame.size.height - targetFrame.size.height)/2;
     }
-
+    
     return targetFrame;
 }
 
@@ -348,7 +372,7 @@
         [self.view addSubview:self.numLab];
         [self.view addSubview:self.numLabShadowView];
         [self.view bringSubviewToFront:self.numLab];
-
+        
         [self.numLab addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
     }
 }
@@ -356,11 +380,11 @@
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context
 {
     if ([object isEqual:self.numLab] && [keyPath isEqual:@"text"]) {
-
+        
         if (![change[@"new"] isEqualToString:change[@"old"]]) {
-
+            
             CGFloat width = [self.numLab.text boundingRectWithSize:CGSizeMake(MAXFLOAT, self.numLab.frame.size.height) options: NSStringDrawingUsesFontLeading | NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:self.numLab.font} context:nil].size.width + 30;
-
+            
             CGRect numLabShadowViewRect = self.numLabShadowView.frame;
             numLabShadowViewRect.size.width = width;
             numLabShadowViewRect.origin.x = (self.view.frame.size.width - width)/2.0f;
@@ -376,7 +400,7 @@
     if (!_collectionView) {
         BKPhotoBrowserCollectionViewFlowLayout * flowLayout = [[BKPhotoBrowserCollectionViewFlowLayout alloc]init];
         flowLayout.allImageCount = _allImageCount;
-
+        
         _collectionView = [[UICollectionView alloc]initWithFrame:CGRectMake(-BKPhotoBrowser_ImageViewMargin, 0, self.view.frame.size.width+BKPhotoBrowser_ImageViewMargin*2, self.view.frame.size.height) collectionViewLayout:flowLayout];
         _collectionView.delegate = self;
         _collectionView.dataSource = self;
@@ -388,7 +412,7 @@
         if (@available(iOS 11.0, *)) {
             _collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
         }
-
+        
         [_collectionView registerClass:[BKPhotoBrowserCollectionViewCell class] forCellWithReuseIdentifier:Photo_CollectionView_Identifier];
     }
     return _collectionView;
@@ -402,21 +426,21 @@
 -(UICollectionViewCell*)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
 {
     BKPhotoBrowserCollectionViewCell * cell = (BKPhotoBrowserCollectionViewCell*)[collectionView dequeueReusableCellWithReuseIdentifier:Photo_CollectionView_Identifier forIndexPath:indexPath];
-
+    
     UITapGestureRecognizer * deleteRecognizer = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(imageScrollViewRecognizer:)];
     deleteRecognizer.numberOfTapsRequired = 1;
     [cell.imageScrollView addGestureRecognizer:deleteRecognizer];
-
+    
     UITapGestureRecognizer * imageScrollViewRecognizer = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(imageScrollViewRecognizer:)];
     imageScrollViewRecognizer.numberOfTapsRequired = 2;
     [cell.imageScrollView addGestureRecognizer:imageScrollViewRecognizer];
-
+    
     [deleteRecognizer requireGestureRecognizerToFail:imageScrollViewRecognizer];
-
+    
     UILongPressGestureRecognizer * imageScrollViewLongPress = [[UILongPressGestureRecognizer alloc]initWithTarget:self action:@selector(imageScrollViewLongPress:)];
     imageScrollViewLongPress.minimumPressDuration = 0.3;
     [cell.imageScrollView addGestureRecognizer:imageScrollViewLongPress];
-
+    
     return cell;
 }
 
@@ -425,12 +449,12 @@
     if (!_collectionView.hidden) {
         _currentIndex = indexPath.item;
     }
-
+    
     BKPhotoBrowserCollectionViewCell * aCell = (BKPhotoBrowserCollectionViewCell*)cell;
     aCell.imageScrollView.contentSize = CGSizeMake(cell.frame.size.width-BKPhotoBrowser_ImageViewMargin*2, cell.frame.size.height);
     aCell.imageScrollView.zoomScale = 1;
     aCell.showImageView.image = nil;
-
+    
     self.interactiveTransition.startImageView = aCell.showImageView;
     self.interactiveTransition.supperScrollView = aCell.imageScrollView;
     
@@ -447,7 +471,7 @@
     CGRect targetFrame = [self calculateTargetFrameWithImageView:imageView];
     aCell.showImageView.frame = targetFrame;
     aCell.imageScrollView.contentSize = CGSizeMake(aCell.showImageView.frame.size.width, aCell.showImageView.frame.size.height);
-
+    
     BKPhotoBrowserIndicator * oldIndicator = [aCell viewWithTag:1];
     [oldIndicator removeFromSuperview];
     
@@ -531,7 +555,7 @@
             showImageView.image = [UIImage imageWithData:imageData];
         }
     }
-
+    
     showImageView.frame = [self calculateTargetFrameWithImageView:showImageView];
     imageScrollView.contentSize = CGSizeMake(showImageView.frame.size.width, showImageView.frame.size.height);
     
@@ -544,9 +568,9 @@
 -(void)imageScrollViewRecognizer:(UITapGestureRecognizer*)recoginzer
 {
     UIScrollView * imageScrollView = (UIScrollView*)recoginzer.view;
-
+    
     if (recoginzer.numberOfTapsRequired == 1) {
-
+        
         [self.nav dismissViewControllerAnimated:YES completion:nil];
         
     }else if (recoginzer.numberOfTapsRequired == 2) {
@@ -561,7 +585,7 @@
 -(void)imageScrollViewLongPress:(UILongPressGestureRecognizer*)longPress
 {
     if (longPress.state == UIGestureRecognizerStateBegan) {
-
+        
         UIScrollView * imageScrollView = (UIScrollView*)longPress.view;
         [[imageScrollView subviews] enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
             if ([obj isKindOfClass:[FLAnimatedImageView class]]) {
@@ -588,11 +612,11 @@
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView
 {
     if (scrollView == _collectionView) {
-
+        
         CGPoint pInView = [self.view convertPoint:_collectionView.center toView:_collectionView];
         NSIndexPath *indexPathNow = [_collectionView indexPathForItemAtPoint:pInView];
         NSInteger item = indexPathNow.item;
-
+        
         if (!_collectionView.hidden) {
             _currentIndex = item;
             
@@ -600,11 +624,60 @@
             self.interactiveTransition.startImageView = cell.showImageView;
             self.interactiveTransition.supperScrollView = cell.imageScrollView;
         }
-
+        
         if (_allImageCount != 1) {
             self.numLab.text = [NSString stringWithFormat:@"%ld/%ld",(long)_currentIndex+1,(unsigned long)_allImageCount];
         }
     }
+}
+
+#pragma mark - 状态栏
+
+-(void)setStatusBarStyle:(UIStatusBarStyle)statusBarStyle
+{
+    _statusBarStyle = statusBarStyle;
+    
+    [UIApplication sharedApplication].statusBarStyle = _statusBarStyle;
+    [self setNeedsStatusBarAppearanceUpdate];
+}
+
+-(void)setStatusBarHidden:(BOOL)statusBarHidden
+{
+    _statusBarHidden = statusBarHidden;
+    
+    [UIApplication sharedApplication].statusBarHidden = _statusBarHidden;
+    [self setNeedsStatusBarAppearanceUpdate];
+}
+
+-(void)setStatusBarHidden:(BOOL)hidden withAnimation:(UIStatusBarAnimation)animation
+{
+    _statusBarHidden = hidden;
+    _statusBarUpdateAnimation = animation;
+    
+    [[UIApplication sharedApplication] setStatusBarHidden:_statusBarHidden withAnimation:_statusBarUpdateAnimation];
+    [self setNeedsStatusBarAppearanceUpdate];
+}
+
+-(void)setStatusBarUpdateAnimation:(UIStatusBarAnimation)statusBarUpdateAnimation
+{
+    _statusBarUpdateAnimation = statusBarUpdateAnimation;
+    
+    [self setNeedsStatusBarAppearanceUpdate];
+}
+
+-(UIStatusBarStyle)preferredStatusBarStyle
+{
+    return self.statusBarStyle;
+}
+
+-(BOOL)prefersStatusBarHidden
+{
+    return self.statusBarHidden;
+}
+
+-(UIStatusBarAnimation)preferredStatusBarUpdateAnimation
+{
+    return self.statusBarUpdateAnimation;
 }
 
 @end

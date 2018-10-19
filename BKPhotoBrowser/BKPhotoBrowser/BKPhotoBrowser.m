@@ -103,13 +103,13 @@
     NSString * originalMethodName = @"diskImageDataBySearchingAllPathsForKey:";
     
     u_int count = 0;
-    Method * methods = class_copyMethodList([self class], &count);
+    Method * methods = class_copyMethodList([[[SDWebImageManager sharedManager] imageCache] class], &count);
     for (int i = 0; i < count; i++) {
         SEL methodName  = method_getName(methods[i]);
         NSString * methodString = NSStringFromSelector(methodName);
         if ([originalMethodName isEqualToString:methodString]){
             free(methods);
-            NSData * data = ((id (*)(id, SEL, id))objc_msgSend)(self, methodName, url);
+            NSData * data = ((id (*)(id, SEL, id))objc_msgSend)([[SDWebImageManager sharedManager] imageCache], methodName, url);
             return data;
         }
     }

@@ -654,7 +654,10 @@
     _statusBarHidden = hidden;
     _statusBarUpdateAnimation = animation;
     
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     [[UIApplication sharedApplication] setStatusBarHidden:_statusBarHidden withAnimation:_statusBarUpdateAnimation];
+#pragma clang diagnostic pop
     [self setNeedsStatusBarAppearanceUpdate];
 }
 
